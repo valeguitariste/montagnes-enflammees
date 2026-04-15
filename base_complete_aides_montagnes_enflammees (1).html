@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base complète — Aides Les Montagnes Enflammées</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #fff; color: #111; font-size: 13px; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: .5rem; }
+  .subtitle { font-size: 12px; color: #666; margin-bottom: 1.25rem; }
+  .stats { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .stat { background: #f5f5f3; border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #666; }
+  .stat strong { font-size: 16px; font-weight: 500; color: #111; display: block; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: .4rem; align-items: center; }
+  .filter-label { font-size: 11px; color: #999; margin-right: 2px; }
+  .filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 14px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; white-space: nowrap; }
+  .filter-btn.active { background: #111; color: #fff; border-color: #111; }
+  .filters { margin-bottom: 1.25rem; }
+  .section { margin-bottom: 1.5rem; }
+  .section-title { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: #999; padding-bottom: 5px; border-bottom: 0.5px solid #e5e5e5; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .badge-count { background: #f0f0ee; padding: 1px 6px; border-radius: 8px; font-size: 10px; color: #888; }
+  .card { border: 0.5px solid #e8e8e8; border-radius: 10px; padding: 9px 11px; margin-bottom: 6px; background: #fff; display: flex; gap: 9px; cursor: pointer; transition: border-color .12s; }
+  .card:hover { border-color: #bbb; }
+  .card.expanded .detail { display: block; }
+  .bar { flex-shrink: 0; width: 4px; border-radius: 2px; align-self: stretch; min-height: 32px; }
+  .main { flex: 1; min-width: 0; }
+  .name { font-size: 12.5px; font-weight: 500; color: #111; line-height: 1.3; }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+  .t-res { background: #E1F5EE; color: #0F6E56; }
+  .t-bourse { background: #EEEDFE; color: #3C3489; }
+  .t-reg { background: #FAEEDA; color: #854F0B; }
+  .t-eu { background: #E6F1FB; color: #0C447C; }
+  .t-star { background: #FCEBEB; color: #993C1D; font-weight: 500; }
+  .t-ur { background: #FCEBEB; color: #A32D2D; font-weight: 600; }
+  .sub { font-size: 11px; color: #777; margin-top: 1px; }
+  .dl-ok { color: #3B6D11; }
+  .dl-soon { color: #854F0B; }
+  .dl-ur { color: #A32D2D; font-weight: 500; }
+  .detail { display: none; margin-top: 7px; padding-top: 6px; border-top: 0.5px solid #eee; font-size: 11px; color: #666; line-height: 1.55; }
+  .detail a { color: #1a6fbb; text-decoration: none; }
+  .detail a:hover { text-decoration: underline; }
+  .chev { font-size: 9px; color: #bbb; margin-left: auto; flex-shrink: 0; transition: transform .18s; align-self: flex-start; margin-top: 3px; }
+  .card.expanded .chev { transform: rotate(180deg); }
+  .empty { padding: 2rem; text-align: center; color: #bbb; font-size: 12px; }
+  .note { font-size: 10px; color: #aaa; line-height: 1.5; margin-top: 1rem; padding-top: .75rem; border-top: 0.5px solid #eee; }
+  .c-teal { background: #1D9E75; }
+  .c-pur { background: #7F77DD; }
+  .c-amb { background: #BA7517; }
+  .c-blue { background: #378ADD; }
+  .c-gr { background: #639922; }
+  .c-cor { background: #D85A30; }
+  .c-gray { background: #888780; }
+  @media (max-width: 600px) { body { padding: 1rem; } .stats { gap: 6px; } }
+</style>
+</head>
+<body>
+
+<h1>Base complète — Les Montagnes Enflammées</h1>
+<p class="subtitle">Aides à l'écriture, résidences et bourses — Animation long métrage stop-motion + 2D mixte<br>Thomas CSABA (Occitanie) · Valentin LEVERRIER (PACA) · Mis à jour avril 2026</p>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters">
+  <div class="filter-row">
+    <span class="filter-label">Type :</span>
+    <button class="filter-btn active" onclick="setFilter('type','all',this)">Tout</button>
+    <button class="filter-btn" onclick="setFilter('type','res',this)">Résidences</button>
+    <button class="filter-btn" onclick="setFilter('type','bourse',this)">Bourses nationales</button>
+    <button class="filter-btn" onclick="setFilter('type','reg',this)">Aides régionales</button>
+    <button class="filter-btn" onclick="setFilter('type','eu',this)">Europe & international</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Zone :</span>
+    <button class="filter-btn active" onclick="setFilter('zone','all',this)">Toutes zones</button>
+    <button class="filter-btn" onclick="setFilter('zone','paca',this)">PACA (Valentin)</button>
+    <button class="filter-btn" onclick="setFilter('zone','occ',this)">Occitanie (Thomas)</button>
+    <button class="filter-btn" onclick="setFilter('zone','nat',this)">National</button>
+    <button class="filter-btn" onclick="setFilter('zone','eu',this)">Europe</button>
+  </div>
+</div>
+
+<div id="timeline"></div>
+
+<div class="note">★ = priorité haute. Cliquer sur une ligne pour voir le détail et le lien officiel. Les aides régionales nécessitent souvent un lien territorial (domicile, tournage ou lien culturel). Les aides CNC régionales et développement nécessitent en général une société de production. Dates indicatives — vérifiez toujours sur le site officiel avant de déposer un dossier.</div>
+
+<script>
+const D = [
+  // PACA
+  {id:'p1',name:'Région Sud PACA — bourse écriture LM fiction (auteur direct)',type:'reg',zone:'paca',bar:'c-amb',dl:'15 avr & 30 sept chaque année',urg:0,star:true,amount:'Variable',desc:'Bourse directe aux auteurs (sans producteur requis) pour fiction, animation, documentaire, immersif. Deux dépôts/an : 15 avril et 30 septembre. Lien géographique ou domicile PACA = critère clé. Animation éligible.',url:'https://www.maregionsud.fr/vos-aides/detail/soutien-a-la-creation-et-a-la-production-de-long-metrage-de-fiction'},
+  {id:'p2',name:'Région Sud PACA — fonds animation écriture LM ★',type:'reg',zone:'paca',bar:'c-amb',dl:'15 avr & 30 sept',urg:0,star:true,amount:'Variable',desc:'Fonds spécifique animation : aide à l\'écriture, au développement, à la production. Dépôts permanents aux dates du 15 avril et 30 septembre. L\'auteur doit résider en PACA ou avoir un lien géographique ou culturel fort. Contrat d\'auteur min. 1 500 € requis.',url:'https://www.maregionsud.fr/vos-aides/detail/soutien-a-la-creation-et-a-la-production-doeuvres-danimation'},
+  {id:'p3',name:'Département des Alpes-Maritimes (06) — aide LM cinéma',type:'reg',zone:'paca',bar:'c-amb',dl:'Variable (à surveiller)',urg:0,star:false,amount:'Variable',desc:'Le département des Alpes-Maritimes soutient des longs métrages avec un lien à son territoire. Casa Cine se déroule au Château de La Napoule (06), connexion utile.',url:'https://www.departement06.fr/aide-au-long-metrage-de-cinema-27130.html'},
+
+  // OCCITANIE
+  {id:'o1',name:'Région Occitanie — aide écriture audiovisuelle ★',type:'reg',zone:'occ',bar:'c-amb',dl:'15 mai 2026 ⚠',urg:1,star:true,amount:'Variable',desc:'Animation éligible dès 26 min. Dépôt en ligne du 15 avril au 15 mai 2026. Les Pyrénées = lien géographique et culturel fort, argument majeur pour ce projet.',url:'https://www.laregion.fr/Cinema-Audiovisuel-Multimedia-Aide-a-l-ecriture-d-oeuvres-audiovisuelles'},
+  {id:'o2',name:'Région Occitanie — aide création audiovisuelle animation LM ★',type:'reg',zone:'occ',bar:'c-amb',dl:'1er juin 2026 puis 1er fév 2027',urg:0,star:true,amount:'Variable',desc:'Animation LM (60 min+) pour cinéma. Dates 2026 : 1er juin, puis 1er février 2027. Lien Pyrénées = atout décisif. Distincts de l\'aide à l\'écriture audiovisuelle.',url:'https://www.laregion.fr/Cinema-Audiovisuel-Multimedia-Aide-a-la-creation-audiovisuelle'},
+  {id:'o3',name:'Occitanie Films — résidence doc croisée Québec/Occitanie',type:'res',zone:'occ',bar:'c-teal',dl:'27 mars 2026 (clos) — surveiller 2027',urg:0,star:false,amount:'Résidence + bourse',desc:'Festival de cinéma de Québec et Vues du Québec (Florac 48). Programme doc/fiction croisé entre Occitanie et Québec. Édition 2026 close, à surveiller 2027.',url:'https://www.occitanie-films.fr/category/animation-de-la-filiere/appel-a-projets/'},
+
+  // NATIONAL — BOURSES
+  {id:'n1',name:'Beaumarchais-SACD — bourse cinéma long métrage ★★',type:'bourse',zone:'nat',bar:'c-pur',dl:'~mai 2026 (calendrier à confirmer)',urg:0,star:true,amount:'Variable, cumulable',desc:'Porte d\'entrée sans condition de palmarès. Animation cinéma éligible. Co-écriture = dossier unique des 2 auteurs. Cumulable avec toutes autres aides. Aucune limite d\'âge ni nationalité.',url:'https://beaumarchais.asso.fr/cinema-long-metrage/'},
+  {id:'n2',name:'CNC — aide à l\'écriture scénario LM ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'Variable (commissions annuelles)',urg:0,star:true,amount:'Sélective',desc:'Pour auteurs/auteurs-réalisateurs non accompagnés par producteur. Stade synopsis/traitement. Éligibilité : 2 CM en festival cat.1 OU 2 œuvres AV 26min+ diffusées. 1 dépôt unique par an. Très sélective.',url:'https://www.cnc.fr/professionnels/aides-et-financements/cinema/scenario/soutien-au-scenario-aide-a-lecriture_191516'},
+  {id:'n3',name:'CNC — aide au parcours d\'auteur',type:'bourse',zone:'nat',bar:'c-pur',dl:'Variable',urg:0,star:false,amount:'20 000 € forfaitaire',desc:'Aide unique dans la carrière pour 1 ou 2 co-auteurs. À solliciter au moment clé. Vérifier éligibilité au regard de Capsule Sonore et des clips réalisés.',url:'https://www.cnc.fr/professionnels/aides-et-financements/audiovisuel/ecriture-et-developpement'},
+  {id:'n4',name:'CNC — aide aux techniques d\'animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'Plusieurs commissions/an',urg:0,star:true,amount:'Sélective',desc:'Spécifique stop-motion + 2D mixte. Renouvellement création visuelle = critère central. Nécessite société de production déléguée en France. Très pertinent pour votre technique hybride.',url:'https://www.cnc.fr/professionnels/aides-et-financements/multi-sectoriel/production/aides-aux-techniques-danimation-anciennement-cvs_1664116'},
+  {id:'n5',name:'Ciclic Animation — aide écriture LM animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'Dépôt 29 juin–3 juil 2026 (2e session)',urg:0,star:true,amount:'10 000 €',desc:'Spécifique animation toutes techniques. Basé sur pitch au Cartoon Movie, MIFA Annecy ou CEE Animation Forum. Nécessite société de production. Deux sessions/an.',url:'https://animation.ciclic.fr/fonds-d-aides/longs-metrages'},
+  {id:'n6',name:'Lagardère — bourse auteur film animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'~automne 2026',urg:0,star:true,amount:'Variable (dotation)',desc:'Pour jeunes auteurs. Permet de réaliser le pilote d\'un LM d\'animation. Âge maximum à vérifier. Jury de professionnels de l\'animation.',url:'https://www.lagardere.com/fondation/bourses/auteur-de-film-danimation/'},
+  {id:'n7',name:'La Fémis — formation Du court au long',type:'bourse',zone:'nat',bar:'c-gray',dl:'27 avril 2026 ⚠',urg:1,star:false,amount:'Formation professionnelle',desc:'Pour auteurs-réalisateurs développant leur 1er scénario LM. À l\'issue : traitement + scène dialoguée. Ouvert animation/fiction.',url:'https://www.cnc.fr/-/ressources-auteurs-actualites'},
+  {id:'n8',name:'La Scénaristerie — atelier long métrage',type:'res',zone:'nat',bar:'c-teal',dl:'~mai 2026',urg:0,star:false,amount:'Bourse ~1 000 € / auteur (CNC)',desc:'6 scénaristes sélectionnés. Résidence d\'écriture intensive à Paris avec consultants. Adhésion à l\'association requise. Co-écriture possible.',url:'https://www.scenaristerie.com/appel-a-projets-atelier-long-metrage'},
+  {id:'n9',name:'Île-de-France — aide écriture scénario animation/fiction ★',type:'reg',zone:'nat',bar:'c-amb',dl:'10 juin 2026 (1 journée seulement !)',urg:0,star:true,amount:'8 000–18 000 € selon durée',desc:'Bourse directe aux auteurs (pas de producteur). Fiction, animation, documentaire. Deux collèges : débutants et confirmés. Inscriptions UNIQUEMENT le 10 juin 2026 de 9h à 17h. Nécessite un ancrage ou partenaire IDF.',url:'https://www.iledefrance.fr/aides-et-appels-a-projets/aide-lecriture-de-scenario-cinema-et-audiovisuel'},
+
+  // RÉSIDENCES
+  {id:'r1',name:'Groupe Ouest — workshops dramaturgie ★',type:'res',zone:'nat',bar:'c-teal',dl:'19 avril 2026 ⚠',urg:1,star:true,amount:'Gratuit sur sélection',desc:'2×1 semaine en Finistère. Long métrage en début ou avancée de développement. Sessions 15–19 juin et 26–30 octobre 2026. Très recommandé pour solidifier la structure narrative.',url:'https://www.legroupeouest.com/actualites/workshops-groupe-ouest-developpement/'},
+  {id:'r2',name:'Groupe Ouest — sélection annuelle 2027',type:'res',zone:'nat',bar:'c-teal',dl:'~novembre 2026',urg:0,star:true,amount:'8 mois accompagnement + hébergement (Breizh Film Fund)',desc:'8 projets/an, LM fiction + animation. 3 sessions collectives en Finistère + suivi distance. Frais hébergement/repas pris en charge. Appel 2026 = clos, préparer pour novembre 2026.',url:'https://www.legroupeouest.com/actualites/selection-annuelle-appel-a-projets/'},
+  {id:'r3',name:'Moulin d\'Andé CÉCI — résidence francophone ★',type:'res',zone:'nat',bar:'c-teal',dl:'~octobre 2026',urg:0,star:true,amount:'Pension complète gratuite (25–40 jours)',desc:'8 lauréats/an. LM documentaire ou fiction en français. Pension complète, consultants dédiés. Appel septembre-octobre pour l\'année suivante. Ouverte aux binômes auteur-réalisateur/compositeur.',url:'https://moulinande.com/ceci-residence-francophone/'},
+  {id:'r4',name:'Bordeaux Animation Workshop (BAW) ★',type:'res',zone:'nat',bar:'c-teal',dl:'2 sessions : ~avr & ~oct 2026',urg:0,star:true,amount:'Accompagnement (sans producteur requis)',desc:'6 projets animation tous formats et techniques, sans producteur. Idéal stade actuel. But : dossier complet pour dépôts d\'aide + démarchage producteurs.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r5',name:'Magelis/Animation3 (Charente + Wallimage + Film Fund Lux) ★',type:'res',zone:'nat',bar:'c-teal',dl:'Appel ~juin pour résidence ~oct',urg:0,star:true,amount:'3 000 € + hébergement + accompagnement',desc:'Résidence internationale 3 semaines animation (LM ou série). 1 semaine par pays signataire. Langue française. Phase de démarrage requise (non réécriture). Synopsis 3p + CV + description technique.',url:'https://www.magelis.org/aides-magelis/'},
+  {id:'r6',name:'Do Not Disturb — résidence écriture animation',type:'res',zone:'nat',bar:'c-teal',dl:'2 sessions : ~avr & ~oct',urg:0,star:false,amount:'Variable',desc:'Résidence dédiée à l\'écriture animation. Tous formats (LM, CM, série, doc animé). 2 sessions/an.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r7',name:'La Jachère — résidence cinéastes animation',type:'res',zone:'nat',bar:'c-teal',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Lieu de recherches pour cinéastes animation. Tous formats. Ouverte aux praticiens de tous arts.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r8',name:'Casa Cine — résidence LM écriture + musique ★',type:'res',zone:'nat',bar:'c-teal',dl:'Appel auteurs oct-nov / compositeurs jan-fév',urg:0,star:true,amount:'3 semaines au Château La Napoule (Cannes)',desc:'Animation éligible. Duo idéal : résidence pour auteurs ET compositeurs simultanément (Thomas = auteur-réalisateur / Valentin = compositeur). Résidence au moment du Festival de Cannes. Tout âge, toute nationalité.',url:'https://casacine.org/fr/appel-a-projets-casa-cine-2026'},
+  {id:'r9',name:'ALCA Nouvelle-Aquitaine — Chalet Mauriac',type:'res',zone:'nat',bar:'c-teal',dl:'Variable (appel annuel)',urg:0,star:false,amount:'Résidence 2–4 semaines + bourse 1 500 €',desc:'Résidence à Saint-Symphorien (Gironde). Accompagne premiers LM tous genres confondus (fiction, animation, doc). Lien Nouvelle-Aquitaine ou Biarritz/Poitiers Film Lab requis.',url:'https://alca-nouvelle-aquitaine.fr/fr/cinema-audiovisuel/residences-cinema'},
+  {id:'r10',name:'CITIA — Résidence Annecy Festival ★',type:'res',zone:'nat',bar:'c-teal',dl:'~été 2026 (pour 2027)',urg:0,star:true,amount:'Accompagnement + mentors + mise en réseau MIFA',desc:'La résidence animation de référence. Support spécifique LM animation, mentors d\'excellence. 6e édition en 2026. Candidature pour 2027 à surveiller après le festival (juin).',url:'https://www.annecyfestival.com/residence-annecy-festival'},
+  {id:'r11',name:'Nef Animation + Ciclic — résidence 2 mois animation',type:'res',zone:'nat',bar:'c-teal',dl:'~jan 2027 (pour résidence printemps 2027)',urg:0,star:false,amount:'Accompagnement + développement graphique',desc:'Programme 2 mois (avr-mai). Tous formats animation CM/LM. Storyboard, animatique, pitch, dossier. Candidatures féminines encouragées. Appel 2026 clos (jan), surveiller 2027.',url:'https://animation.ciclic.fr/'},
+  {id:'r12',name:'Trégor Cinéma — tutorat long métrage',type:'res',zone:'nat',bar:'c-teal',dl:'Toute l\'année',urg:0,star:false,amount:'Payant (accompagnement professionnel)',desc:'Accompagnement individuel pour développer le scénario de LM. Animation acceptée. Fiche de lecture + tutorat. Mise en réseau vers sociétés de production. Très accessible (pas d\'appel à projet).',url:'https://www.tregorcinema.com/'},
+
+  // AUTRES RÉGIONS
+  {id:'rf1',name:'Auvergne-Rhône-Alpes — écriture LM fiction/animation ★',type:'reg',zone:'nat',bar:'c-amb',dl:'3 fév 2026 (passé) · 6 oct 2026',urg:0,star:true,amount:'Jusqu\'à 20 000 €',desc:'2 sessions/an. LM fiction, animation, documentaire. Lien "significatif" avec la région requis. Connexion à Annecy (MIFA, CITIA, Festival animation) = argument fort. Session 2 : 6 octobre 2026.',url:'https://www.auvergnerhonealpes-cinema.fr/professionnels/financement-des-projets/fonds-cinema-ecrituredeveloppement/'},
+  {id:'rf2',name:'Auvergne-Rhône-Alpes — audiovisuel fiction/animation',type:'reg',zone:'nat',bar:'c-amb',dl:'10 mars 2026 (passé) · 8 juil 2026',urg:0,star:false,amount:'Jusqu\'à 20 000 €',desc:'Séries, spéciaux, unitaires fiction + animation. 2 sessions/an. Lien régional requis.',url:'https://www.auvergnerhonealpes-cinema.fr/professionnels/financement-des-projets/fonds-audiovisuel-ecrituredeveloppement/'},
+  {id:'rf3',name:'Normandie Images — aide écriture LM',type:'reg',zone:'nat',bar:'c-amb',dl:'3 sessions/an',urg:0,star:false,amount:'Jusqu\'à 12 000 €',desc:'Fiction, documentaire, animation +60 min. Auteur domicilié en Normandie OU lien culturel Normandie OU résidence au Moulin d\'Andé (!) = critère d\'éligibilité. Astuce : une résidence CÉCI ouvre l\'accès à cette aide.',url:'https://normandieimages.fr/creation-production/fonds-d-aides/'},
+  {id:'rf4',name:'Bretagne FACCA — écriture LM animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable (plusieurs sessions)',urg:0,star:false,amount:'10 000 €',desc:'Résidence en Bretagne ou lien culturel avec la Bretagne requis. LM fiction + animation. Le Groupe Ouest est en Bretagne — une sélection GO ouvre potentiellement ce fonds.',url:'https://www.bretagne.bzh/aides/fiches/cinema-audiovisuel-facca-ecriture-et-developpement/'},
+  {id:'rf5',name:'Grand Est — aide écriture cinéma/audiovisuel animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Continu (sur rendez-vous)',urg:0,star:false,amount:'Variable',desc:'Animation LM éligible. Lien avec le Grand Est requis (auteur, société de production ou engagement moral de tournage/fabrication). Entretien préalable recommandé.',url:'https://www.grandest.fr/vos-aides-regionales/aide-a-lecriture-cinema-audiovisuel-nouveaux-medias/'},
+  {id:'rf6',name:'Hauts-de-France — fonds fiction/animation LM',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable (sessions)',urg:0,star:false,amount:'Variable',desc:'Soutien à l\'écriture et développement animation et fiction. Nécessite producteur. Lien avec les Hauts-de-France.',url:'https://mesaidespubliques.infogreffe.fr/aides/hauts-de-france-fonds-regional-aide-fiction-cinematographique-audiovisuelle-long-metrage-court-metrage-animation-serie-unitaire'},
+  {id:'rf7',name:'Magelis Charente — aide écriture développement animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable (sessions)',urg:0,star:false,amount:'Variable',desc:'Aide à l\'écriture/développement animation LM et unitaire. Département de la Charente en partenariat CNC + Région Nouvelle-Aquitaine. Prestataire local animation requis.',url:'https://www.magelis.org/aides-magelis/'},
+
+  // EUROPE & INTERNATIONAL
+  {id:'e1',name:'Europe Créative MEDIA — développement LM animation ★',type:'eu',zone:'eu',bar:'c-blue',dl:'Plusieurs fenêtres/an',urg:0,star:true,amount:'Jusqu\'à 80% coûts éligibles',desc:'LM animation destiné aux salles (60 min min). Nécessite producteur européen indépendant. Slate Development (3-5 projets) ou Single Project. Accès via bureau Europe Créative France. Contacter MEDIA France en amont.',url:'https://www.europecreative.be/fr/progr-media/aides'},
+  {id:'e2',name:'Centre du Cinéma FWB Belgique — écriture LM animation ★',type:'eu',zone:'eu',bar:'c-blue',dl:'11 mai 2026 (prochaine session)',urg:0,star:true,amount:'15 000 € (développement artistique)',desc:'Aide développement artistique LM animation (30 000 €) ou écriture (15 000 €) pour projets d\'initiative belge francophone. Nécessite producteur avec siège social en FWB. Potentiel de coproduction France-Belgique très fort pour ce projet.',url:'https://audiovisuel.cfwb.be/aides/aide-creation/aide-longs-metrages/'},
+  {id:'e3',name:'Cinéforom Suisse romande — aide sélective animation',type:'eu',zone:'eu',bar:'c-blue',dl:'4 sessions/an',urg:0,star:false,amount:'Jusqu\'à CHF 30 000 écriture',desc:'Tous genres (fiction, doc, animation), toutes durées. Nécessite société romande ou suisse. Coproduction France-Suisse possible. 4 commissions/an. Contacter Cinéforom pour éligibilité.',url:'https://www.cineforom.ch/aide-selective'},
+  {id:'e4',name:'OFC Suisse — encouragement sélectif cinéma',type:'eu',zone:'eu',bar:'c-blue',dl:'Variable (commissions)',urg:0,star:false,amount:'Variable',desc:'Office fédéral de la culture. Soutien développement + écriture. Animation éligible. Nécessite partenaire suisse. Complément Cinéforom souvent.',url:'https://www.bak.admin.ch/bak/fr/home/creation-culturelle/cinema/encouragement-du-cinema/encouragement-selectif.html'},
+  {id:'e5',name:'Film Fund Luxembourg — partenaire Magelis Animation3',type:'eu',zone:'eu',bar:'c-blue',dl:'Via Magelis (appel ~juin)',urg:0,star:false,amount:'Via résidence Animation3',desc:'Partenaire du dispositif Magelis/Animation3. Le Film Fund Luxembourg soutient les projets d\'animation francophones en phase de démarrage. Accessible via la résidence tripartite.',url:'https://www.filmfund.lu/'},
+  {id:'e6',name:'Wallimage (Wallonie) — investissement animation',type:'eu',zone:'eu',bar:'c-blue',dl:'Continu',urg:0,star:false,amount:'Variable (investissement)',desc:'Partenaire Magelis Animation3 et fonds d\'investissement en production. Animation LM éligible. Nécessite dépenses en Wallonie. Utile dans une stratégie de coproduction belge.',url:'https://www.wallimage.be/'},
+  {id:'e7',name:'TorinoFilmLab — ScriptLab/Extended ★',type:'eu',zone:'eu',bar:'c-blue',dl:'~printemps (à vérifier)',urg:0,star:true,amount:'Accompagnement + réseau européen',desc:'Programme développement scénarios premiers/seconds LM. 3 workshops + suivi personnalisé. Animation éligible. Principalement en anglais mais projets francophones acceptés. Forte réputation internationale.',url:'https://www.torinofilmlab.it'},
+  {id:'e8',name:'Biennale College Cinema (Venise) — micro-budget',type:'eu',zone:'eu',bar:'c-blue',dl:'~printemps',urg:0,star:false,amount:'150 000 € (3 projets sélectionnés)',desc:'Soutien réalisation premiers/seconds LM à micro-budget. Animation éligible. Très sélectif mais financement de production direct. Candidature annuelle.',url:'https://www.labiennale.org/en/cinema/college'},
+  {id:'e9',name:'SODEC Québec — prototypage LM animation',type:'eu',zone:'eu',bar:'c-gr',dl:'Plusieurs sessions/an',urg:0,star:false,amount:'Variable (investissement)',desc:'Aide au prototypage de LM animation pour sociétés québécoises. Pertinent en cas de coproduction officielle France-Canada. Langue française = critère fort. Nécessite producteur québécois partenaire.',url:'https://sodec.gouv.qc.ca/domaines-dintervention/cinema-et-television/aide-financiere/aide-developpement/'},
+];
+
+let fType = 'all', fZone = 'all';
+
+function setFilter(dim, val, btn) {
+  if (dim === 'type') {
+    fType = val;
+    document.querySelectorAll('.filter-row:first-child .filter-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    fZone = val;
+    document.querySelectorAll('.filter-row:last-child .filter-btn').forEach(b => b.classList.remove('active'));
+  }
+  btn.classList.add('active');
+  render();
+}
+
+function toggle(id) {
+  const el = document.getElementById('c-' + id);
+  if (el) el.classList.toggle('expanded');
+}
+
+function getFiltered() {
+  return D.filter(d => {
+    const okType = fType === 'all' || d.type === fType;
+    const okZone = fZone === 'all' || d.zone === fZone;
+    return okType && okZone;
+  });
+}
+
+const SECTIONS = [
+  {key:'urgent', label:'🚨 Urgent — deadline dans les 30 jours', fn: d => d.urg === 1},
+  {key:'star',   label:'★ Priorité haute (recommandés)',         fn: d => d.star && !d.urg},
+  {key:'paca',   label:'PACA — aides régionales',               fn: d => d.zone === 'paca' && !d.star && !d.urg},
+  {key:'occ',    label:'Occitanie — aides régionales',          fn: d => d.zone === 'occ' && !d.star && !d.urg},
+  {key:'res',    label:'Résidences d\'écriture',                fn: d => d.type === 'res' && !d.star && !d.urg},
+  {key:'bourse', label:'Bourses & aides nationales',            fn: d => (d.type === 'bourse' || (d.zone === 'nat' && d.type === 'reg')) && d.type !== 'res' && !d.star && !d.urg},
+  {key:'eu',     label:'Europe & international',               fn: d => d.type === 'eu' && !d.star && !d.urg},
+];
+
+function dlClass(d) {
+  if (d.urg) return 'dl-ur';
+  if (d.dl.includes('mai') || d.dl.includes('juin') || d.dl.includes('juil') || d.dl.includes('avr')) return 'dl-soon';
+  return 'dl-ok';
+}
+
+function render() {
+  const filtered = getFiltered();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><strong>${filtered.length}</strong>aides affichées</div>
+    <div class="stat"><strong>${filtered.filter(d => d.type === 'res').length}</strong>résidences</div>
+    <div class="stat"><strong>${filtered.filter(d => d.type === 'bourse').length}</strong>bourses nationales</div>
+    <div class="stat"><strong>${filtered.filter(d => d.type === 'reg').length}</strong>aides régionales</div>
+    <div class="stat"><strong>${filtered.filter(d => d.type === 'eu').length}</strong>europe & intl</div>
+  `;
+
+  if (!filtered.length) { tl.innerHTML = '<div class="empty">Aucune aide pour ces filtres.</div>'; return; }
+
+  SECTIONS.forEach(sec => {
+    const items = filtered.filter(sec.fn);
+    if (!items.length) return;
+    const div = document.createElement('div');
+    div.className = 'section';
+    div.innerHTML = `<div class="section-title">${sec.label} <span class="badge-count">${items.length}</span></div>`;
+    items.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = 'c-' + d.id;
+      card.onclick = () => toggle(d.id);
+      const tags = [];
+      if (d.type === 'res')    tags.push('<span class="tag t-res">Résidence</span>');
+      if (d.type === 'bourse') tags.push('<span class="tag t-bourse">Bourse nationale</span>');
+      if (d.type === 'reg')    tags.push('<span class="tag t-reg">Aide régionale</span>');
+      if (d.type === 'eu')     tags.push('<span class="tag t-eu">Europe / intl</span>');
+      if (d.urg)               tags.push('<span class="tag t-ur">⚠ URGENT</span>');
+      if (d.star && !d.urg)   tags.push('<span class="tag t-star">★ Priorité</span>');
+      card.innerHTML = `
+        <div class="bar ${d.bar}"></div>
+        <div class="main">
+          <div class="name">${d.name}</div>
+          <div class="tags">${tags.join('')}</div>
+          <div class="sub">Deadline : <span class="${dlClass(d)}">${d.dl}</span> &nbsp;·&nbsp; ${d.amount}</div>
+          <div class="detail">
+            <p style="margin-bottom:5px">${d.desc}</p>
+            ${d.url ? `<a href="${d.url}" target="_blank">→ Site officiel</a>` : ''}
+          </div>
+        </div>
+        <span class="chev">▾</span>`;
+      div.appendChild(card);
+    });
+    tl.appendChild(div);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
