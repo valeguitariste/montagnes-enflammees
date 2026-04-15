@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base complète — Aides Les Montagnes Enflammées</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #fafaf8; color: #111; font-size: 13px; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 18px; font-weight: 600; margin-bottom: .3rem; }
+.subtitle { font-size: 12px; color: #777; margin-bottom: 1.25rem; line-height: 1.5; }
+
+.sync-bar { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 8px; border: 0.5px solid #e5e5e5; background: #fff; margin-bottom: 1rem; font-size: 11px; color: #777; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; flex-shrink: 0; transition: background .3s; }
+.sync-dot.ok      { background: #1D9E75; }
+.sync-dot.loading { background: #BA7517; animation: pulse 1s infinite; }
+.sync-dot.error   { background: #D85A30; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sync-text { flex: 1; }
+.sync-btn { font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; }
+
+.stats { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+.stat { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 8px; padding: 5px 10px; font-size: 11px; color: #777; }
+.stat strong { font-size: 14px; font-weight: 500; color: #111; display: block; }
+.stat.s-pert strong { color: #0F6E56; }
+
+.filters { margin-bottom: 1.25rem; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: .35rem; align-items: center; }
+.filter-label { font-size: 11px; color: #aaa; margin-right: 2px; min-width: 42px; }
+.filter-btn { font-size: 11px; padding: 2px 9px; border-radius: 12px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; white-space: nowrap; }
+.filter-btn.active { background: #111; color: #fff; border-color: #111; }
+.filter-btn.f-pert.active { background: #0F6E56; border-color: #0F6E56; }
+
+.section { margin-bottom: 1.25rem; }
+.section-title { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: #aaa; padding-bottom: 4px; border-bottom: 0.5px solid #e8e8e8; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.badge-count { background: #f0f0ee; padding: 1px 6px; border-radius: 8px; font-size: 10px; color: #999; }
+
+/* CARD */
+.card { border: 0.5px solid #e8e8e8; border-radius: 9px; margin-bottom: 5px; background: #fff; display: flex; transition: border-color .12s; overflow: hidden; }
+.card:hover { border-color: #ccc; }
+.card.is-pert { border-color: #9FE1CB; }
+.card.is-hidden { display: none; }
+
+.bar { flex-shrink: 0; width: 3px; }
+
+/* MAIN BODY */
+.card-body { flex: 1; min-width: 0; padding: 8px 10px; cursor: pointer; }
+.name { font-size: 12px; font-weight: 500; color: #111; line-height: 1.35; }
+.card.is-pert .name { color: #0a5c42; }
+.chev { display: inline-block; font-size: 8px; color: #ccc; margin-left: 4px; transition: transform .18s; vertical-align: middle; }
+.card.expanded .chev { transform: rotate(180deg); }
+.tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
+.tag { font-size: 10px; padding: 0px 5px; border-radius: 6px; white-space: nowrap; }
+.t-res    { background: #E1F5EE; color: #0F6E56; }
+.t-bourse { background: #EEEDFE; color: #3C3489; }
+.t-reg    { background: #FAEEDA; color: #854F0B; }
+.t-eu     { background: #E6F1FB; color: #0C447C; }
+.t-star   { background: #FCEBEB; color: #993C1D; font-weight: 500; }
+.t-ur     { background: #FCEBEB; color: #A32D2D; font-weight: 600; }
+.sub { font-size: 10px; color: #999; margin-top: 1px; }
+.dl-ok   { color: #3B6D11; }
+.dl-soon { color: #854F0B; }
+.dl-ur   { color: #A32D2D; font-weight: 500; }
+
+/* EXPANDABLE DETAIL */
+.detail { display: none; margin-top: 7px; padding-top: 6px; border-top: 0.5px solid #eee; font-size: 11px; color: #666; line-height: 1.55; }
+.detail a { color: #1a6fbb; text-decoration: none; font-size: 11px; }
+.card.expanded .detail { display: block; }
+
+/* INLINE NOTE (below card body, full width) */
+.note-row { display: none; padding: 0 10px 8px 10px; }
+.card.note-open .note-row { display: block; }
+.note-ta { width: 100%; font-size: 11px; padding: 5px 8px; border: 0.5px solid #e0e0e0; border-radius: 6px; background: #fafaf8; color: #333; font-family: inherit; line-height: 1.45; resize: vertical; min-height: 44px; }
+.note-ta:focus { outline: none; border-color: #aaa; background: #fff; }
+.note-ta::placeholder { color: #d0d0d0; font-style: italic; }
+.note-has { font-size: 10px; color: #1D9E75; margin-top: 3px; }
+
+/* COMPACT ACTION STRIP */
+.actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 7px; border-left: 0.5px solid #f0f0ee; background: #fdfdfc; }
+.card.is-pert .actions { border-left-color: #d0f0e8; background: #f8fefb; }
+
+.act-btn { width: 26px; height: 26px; border-radius: 6px; border: 0.5px solid #e8e8e8; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all .12s; position: relative; }
+.act-btn:hover { border-color: #bbb; background: #f5f5f3; }
+
+/* Pertinent button */
+.act-pert { color: #ccc; }
+.act-pert.on { background: #E1F5EE; border-color: #9FE1CB; color: #0F6E56; }
+
+/* Status button — shows colored dot */
+.act-status { font-size: 10px; font-weight: 500; color: #888; }
+.act-status.s-etude   { color: #bbb; }
+.act-status.s-cours   { background: #FAEEDA; border-color: #FAC775; color: #854F0B; }
+.act-status.s-envoye  { background: #E6F1FB; border-color: #85B7EB; color: #185FA5; }
+.act-status.s-laureat { background: #E1F5EE; border-color: #5DCAA5; color: #0F6E56; }
+.act-status.s-refuse  { background: #FCEBEB; border-color: #F09595; color: #A32D2D; }
+
+/* Note button */
+.act-note { color: #ccc; }
+.act-note.has-note { color: #1D9E75; border-color: #9FE1CB; }
+.act-note.open { background: #f0f0ee; border-color: #bbb; color: #555; }
+
+/* Hide button */
+.act-hide { color: #e0e0e0; font-size: 11px; }
+.act-hide:hover { color: #D85A30; border-color: #F09595; background: #FCEBEB; }
+
+/* STATUS POPUP */
+.status-popup { display: none; position: absolute; right: 32px; top: 0; background: #fff; border: 0.5px solid #ddd; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.1); z-index: 100; min-width: 150px; overflow: hidden; }
+.status-popup.open { display: block; }
+.status-opt { padding: 6px 12px; font-size: 11px; cursor: pointer; color: #555; }
+.status-opt:hover { background: #f5f5f3; }
+.status-opt.active { font-weight: 500; }
+
+.empty { padding: 2rem; text-align: center; color: #ccc; font-size: 12px; }
+.show-hidden-bar { text-align: center; margin-bottom: 1rem; }
+.show-hidden-btn { font-size: 11px; padding: 4px 12px; border-radius: 8px; border: 0.5px solid #ccc; background: #fff; color: #888; cursor: pointer; }
+.show-hidden-btn:hover { border-color: #888; color: #333; }
+.footer-note { font-size: 10px; color: #bbb; line-height: 1.55; margin-top: 1rem; padding-top: .75rem; border-top: 0.5px solid #eee; }
+
+.c-teal { background: #1D9E75; }
+.c-pur  { background: #7F77DD; }
+.c-amb  { background: #BA7517; }
+.c-blue { background: #378ADD; }
+.c-gr   { background: #639922; }
+.c-gray { background: #888780; }
+
+@media (max-width: 480px) {
+  .card { flex-wrap: wrap; }
+  .actions { flex-direction: row; width: 100%; border-left: none; border-top: 0.5px solid #f0f0ee; justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<h1>Les Montagnes Enflammées — Base des aides</h1>
+<p class="subtitle">Thomas CSABA (Occitanie) · Valentin LEVERRIER (PACA) · Animation LM stop-motion + 2D mixte<br>Annotations partagées en temps réel.</p>
+
+<div class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span class="sync-text" id="sync-text">Chargement…</span>
+  <button class="sync-btn" onclick="syncNow()">↺</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters">
+  <div class="filter-row">
+    <span class="filter-label">Vue :</span>
+    <button class="filter-btn f-pert" onclick="setFilter('pert','only',this)">⭐ Pertinents</button>
+    <button class="filter-btn active" onclick="setFilter('pert','all',this)">Tout</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Type :</span>
+    <button class="filter-btn active" onclick="setFilter('type','all',this)">Tout</button>
+    <button class="filter-btn" onclick="setFilter('type','res',this)">Résidences</button>
+    <button class="filter-btn" onclick="setFilter('type','bourse',this)">Bourses</button>
+    <button class="filter-btn" onclick="setFilter('type','reg',this)">Régionales</button>
+    <button class="filter-btn" onclick="setFilter('type','eu',this)">Europe</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Zone :</span>
+    <button class="filter-btn active" onclick="setFilter('zone','all',this)">Toutes</button>
+    <button class="filter-btn" onclick="setFilter('zone','paca',this)">PACA</button>
+    <button class="filter-btn" onclick="setFilter('zone','occ',this)">Occitanie</button>
+    <button class="filter-btn" onclick="setFilter('zone','nat',this)">National</button>
+    <button class="filter-btn" onclick="setFilter('zone','eu',this)">Europe</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Statut :</span>
+    <button class="filter-btn active" onclick="setFilter('status','all',this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('status','en-cours',this)">En cours</button>
+    <button class="filter-btn" onclick="setFilter('status','envoye',this)">Envoyé</button>
+    <button class="filter-btn" onclick="setFilter('status','laureat',this)">Lauréat 🎉</button>
+  </div>
+</div>
+
+<div class="show-hidden-bar" id="show-hidden-bar" style="display:none">
+  <button class="show-hidden-btn" onclick="showAllHidden()">↺ Réafficher les cartes masquées (<span id="hidden-count">0</span>)</button>
+</div>
+
+<div id="timeline"></div>
+
+<div class="footer-note">
+  ✓ = pertinent · point coloré = statut · 📝 = note · ✕ = masquer la carte<br>
+  Cliquer sur le titre pour voir le descriptif · Synchronisation automatique toutes les 30 secondes.
+</div>
+
+<script>
+const BIN_ID  = '69dffd8d36566621a8b9914a';
+const API_KEY = '$2a$10$N9HrIBiMMDSp9vPpXGYgyuMBzDrfNScxPZkeDluC0IUyuiSnHAwtC';
+const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+
+let D = [];
+let STATE = {};
+let saveTimer = null;
+let lastSaved = null;
+
+function defaultState() {
+  const s = {};
+  D.forEach(d => { s[d.id] = { pert: false, status: 'etude', notes: '', hidden: false }; });
+  return s;
+}
+function getS(id) { return STATE[id] || { pert: false, status: 'etude', notes: '', hidden: false }; }
+
+function setSyncStatus(state, msg) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = msg;
+}
+
+async function loadFromBin() {
+  setSyncStatus('loading', 'Chargement…');
+  try {
+    const r = await fetch(BIN_URL + '/latest', { headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    STATE = defaultState();
+    Object.keys(data).forEach(id => {
+      if (STATE[id] !== undefined) STATE[id] = { ...STATE[id], ...data[id] };
+    });
+    lastSaved = JSON.stringify(STATE);
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+    render();
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de connexion');
+    try { STATE = JSON.parse(localStorage.getItem('lme_fallback')) || defaultState(); } catch(_) { STATE = defaultState(); }
+    render();
+  }
+}
+
+async function saveToBin() {
+  const current = JSON.stringify(STATE);
+  if (current === lastSaved) return;
+  setSyncStatus('loading', 'Sauvegarde…');
+  try { localStorage.setItem('lme_fallback', current); } catch(_) {}
+  try {
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+      body: current,
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lastSaved = current;
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de sauvegarde');
+  }
+}
+
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveToBin, 1200); }
+function syncNow() { loadFromBin(); }
+setInterval(() => { if (!document.hidden) loadFromBin(); }, 30000);
+
+// Close any open status popup when clicking elsewhere
+document.addEventListener('click', () => {
+  document.querySelectorAll('.status-popup.open').forEach(p => p.classList.remove('open'));
+});
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+let fPert = 'all', fType = 'all', fZone = 'all', fStatus = 'all';
+const ROW_IDX = { pert: 0, type: 1, zone: 2, status: 3 };
+
+function setFilter(dim, val, btn) {
+  document.querySelectorAll('.filter-row')[ROW_IDX[dim]].querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dim === 'pert')   fPert   = val;
+  if (dim === 'type')   fType   = val;
+  if (dim === 'zone')   fZone   = val;
+  if (dim === 'status') fStatus = val;
+  render();
+}
+
+function getFiltered() {
+  return D.filter(d => {
+    const s = getS(d.id);
+    if (s.hidden) return false;
+    if (fPert   === 'only' && !s.pert)              return false;
+    if (fType   !== 'all'  && d.type !== fType)     return false;
+    if (fZone   !== 'all'  && d.zone !== fZone)     return false;
+    if (fStatus !== 'all'  && s.status !== fStatus) return false;
+    return true;
+  });
+}
+
+// ─── SECTIONS ────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  { label: '🚨 Urgent',             fn: d => d.urg === 1 },
+  { label: '★ Priorité haute',      fn: d => d.star && !d.urg },
+  { label: 'PACA',                  fn: d => d.zone === 'paca' && !d.star && !d.urg },
+  { label: 'Occitanie',             fn: d => d.zone === 'occ'  && !d.star && !d.urg },
+  { label: 'Résidences',            fn: d => d.type === 'res'  && !d.star && !d.urg },
+  { label: 'Bourses & nationales',  fn: d => (d.type === 'bourse' || (d.zone === 'nat' && d.type === 'reg')) && d.type !== 'res' && !d.star && !d.urg },
+  { label: 'Europe & international',fn: d => d.type === 'eu'   && !d.star && !d.urg },
+];
+
+const STATUS_OPTS = [
+  { val: 'etude',    label: '○ À étudier',        cls: 's-etude',  icon: '·'  },
+  { val: 'en-cours', label: '⟳ En cours',         cls: 's-cours',  icon: '⟳' },
+  { val: 'envoye',   label: '✉ Envoyé',           cls: 's-envoye', icon: '✉' },
+  { val: 'laureat',  label: '🎉 Lauréat',          cls: 's-laureat',icon: '🎉' },
+  { val: 'refuse',   label: '✕ Refusé',           cls: 's-refuse', icon: '✕' },
+];
+
+function dlClass(d) {
+  if (d.urg || d.dl.includes('⚠')) return 'dl-ur';
+  if (d.dl.match(/mai|juin|juil|avr/i)) return 'dl-soon';
+  return 'dl-ok';
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleExpand(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('expanded');
+}
+
+function togglePert(id, e) {
+  e.stopPropagation();
+  const s = getS(id);
+  s.pert = !s.pert;
+  STATE[id] = s;
+  scheduleSave();
+  const btn  = document.getElementById('pb-' + id);
+  const card = document.getElementById('card-' + id);
+  btn.className = 'act-btn act-pert' + (s.pert ? ' on' : '');
+  btn.title = s.pert ? 'Pertinent ✓' : 'Marquer pertinent';
+  btn.textContent = s.pert ? '✓' : '○';
+  card.classList.toggle('is-pert', s.pert);
+  updateStats();
+}
+
+function toggleStatusMenu(id, e) {
+  e.stopPropagation();
+  const popup = document.getElementById('sp-' + id);
+  const wasOpen = popup.classList.contains('open');
+  document.querySelectorAll('.status-popup.open').forEach(p => p.classList.remove('open'));
+  if (!wasOpen) popup.classList.add('open');
+}
+
+function setStatus(id, val, e) {
+  e.stopPropagation();
+  STATE[id].status = val;
+  scheduleSave();
+  const so  = STATUS_OPTS.find(o => o.val === val) || STATUS_OPTS[0];
+  const btn = document.getElementById('sb-' + id);
+  btn.className = 'act-btn act-status ' + so.cls;
+  btn.textContent = so.icon;
+  btn.title = so.label;
+  document.getElementById('sp-' + id).classList.remove('open');
+  updateStats();
+}
+
+function toggleNote(id, e) {
+  e.stopPropagation();
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('note-open');
+  const btn = document.getElementById('nb-' + id);
+  btn.classList.toggle('open', card.classList.contains('note-open'));
+  if (card.classList.contains('note-open')) {
+    document.getElementById('ta-' + id).focus();
+  }
+}
+
+function saveNote(id, ta) {
+  STATE[id].notes = ta.value;
+  const btn = document.getElementById('nb-' + id);
+  btn.classList.toggle('has-note', ta.value.trim().length > 0);
+  scheduleSave();
+}
+
+function hideCard(id, e) {
+  e.stopPropagation();
+  STATE[id].hidden = true;
+  scheduleSave();
+  document.getElementById('card-' + id).classList.add('is-hidden');
+  updateHiddenBar();
+  updateStats();
+}
+
+function updateHiddenBar() {
+  const count = D.filter(d => getS(d.id).hidden).length;
+  const bar   = document.getElementById('show-hidden-bar');
+  document.getElementById('hidden-count').textContent = count;
+  bar.style.display = count > 0 ? 'block' : 'none';
+}
+
+function showAllHidden() {
+  D.forEach(d => { if (STATE[d.id]) STATE[d.id].hidden = false; });
+  scheduleSave();
+  render();
+}
+
+function updateStats() {
+  const filtered = getFiltered();
+  document.getElementById('stats').innerHTML =
+    '<div class="stat"><strong>' + D.length + '</strong>total</div>' +
+    '<div class="stat"><strong>' + filtered.length + '</strong>affichées</div>' +
+    '<div class="stat s-pert"><strong>' + D.filter(d=>getS(d.id).pert).length + '</strong>pertinentes</div>' +
+    '<div class="stat"><strong>' + D.filter(d=>getS(d.id).status==='en-cours').length + '</strong>en cours</div>' +
+    '<div class="stat"><strong>' + D.filter(d=>getS(d.id).status==='envoye').length + '</strong>envoyées</div>' +
+    '<div class="stat"><strong>' + D.filter(d=>getS(d.id).status==='laureat').length + '</strong>lauréat</div>';
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const filtered = getFiltered();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  updateStats();
+  updateHiddenBar();
+
+  if (!filtered.length) { tl.innerHTML = '<div class="empty">Aucune aide pour ces filtres.</div>'; return; }
+
+  SECTIONS.forEach(sec => {
+    const items = filtered.filter(sec.fn);
+    if (!items.length) return;
+    const section = document.createElement('div');
+    section.className = 'section';
+    section.innerHTML = '<div class="section-title">' + sec.label + ' <span class="badge-count">' + items.length + '</span></div>';
+
+    items.forEach(d => {
+      const s  = getS(d.id);
+      const so = STATUS_OPTS.find(o => o.val === s.status) || STATUS_OPTS[0];
+      const tags = [];
+      if (d.type === 'res')    tags.push('<span class="tag t-res">Résidence</span>');
+      if (d.type === 'bourse') tags.push('<span class="tag t-bourse">Bourse</span>');
+      if (d.type === 'reg')    tags.push('<span class="tag t-reg">Région</span>');
+      if (d.type === 'eu')     tags.push('<span class="tag t-eu">Europe</span>');
+      if (d.urg)               tags.push('<span class="tag t-ur">⚠ URGENT</span>');
+      if (d.star && !d.urg)   tags.push('<span class="tag t-star">★</span>');
+
+      const statusOptsHtml = STATUS_OPTS.map(o =>
+        '<div class="status-opt' + (s.status===o.val?' active':'') + '" onclick="setStatus(\'' + d.id + '\',\'' + o.val + '\',event)">' + o.label + '</div>'
+      ).join('');
+
+      const card = document.createElement('div');
+      card.className = 'card' + (s.pert ? ' is-pert' : '');
+      card.id = 'card-' + d.id;
+      card.innerHTML =
+        '<div class="bar ' + d.bar + '"></div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="card-body" onclick="toggleExpand(\'' + d.id + '\')">' +
+            '<div class="name">' + d.name + '<span class="chev">▾</span></div>' +
+            '<div class="tags">' + tags.join('') + '&nbsp;<span class="sub"><span class="' + dlClass(d) + '">' + d.dl + '</span> · ' + d.amount + '</span></div>' +
+            '<div class="detail" id="det-' + d.id + '">' +
+              '<p style="margin-bottom:5px">' + d.desc + '</p>' +
+              (d.url ? '<a href="' + d.url + '" target="_blank">→ Site officiel</a>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="note-row">' +
+            '<textarea class="note-ta" id="ta-' + d.id + '" placeholder="Note…" oninput="saveNote(\'' + d.id + '\',this)">' + s.notes + '</textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div class="actions" onclick="event.stopPropagation()">' +
+          // Pertinent
+          '<button class="act-btn act-pert' + (s.pert?' on':'') + '" id="pb-' + d.id + '" onclick="togglePert(\'' + d.id + '\',event)" title="' + (s.pert?'Pertinent ✓':'Marquer pertinent') + '">' + (s.pert?'✓':'○') + '</button>' +
+          // Status
+          '<div style="position:relative">' +
+            '<button class="act-btn act-status ' + so.cls + '" id="sb-' + d.id + '" onclick="toggleStatusMenu(\'' + d.id + '\',event)" title="' + so.label + '">' + so.icon + '</button>' +
+            '<div class="status-popup" id="sp-' + d.id + '">' + statusOptsHtml + '</div>' +
+          '</div>' +
+          // Note
+          '<button class="act-btn act-note' + (s.notes?' has-note':'') + '" id="nb-' + d.id + '" onclick="toggleNote(\'' + d.id + '\',event)" title="Note">📝</button>' +
+          // Hide
+          '<button class="act-btn act-hide" onclick="hideCard(\'' + d.id + '\',event)" title="Masquer cette carte">✕</button>' +
+        '</div>';
+
+      section.appendChild(card);
+    });
+    tl.appendChild(section);
+  });
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+fetch('aides.json?v=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    D = data;
+    STATE = defaultState();
+    loadFromBin();
+  })
+  .catch(() => {
+    document.getElementById('timeline').innerHTML =
+      '<div class="empty">Impossible de charger aides.json — vérifiez que le fichier est dans le même dossier.</div>';
+    setSyncStatus('error', 'Erreur de chargement');
+  });
+</script>
+</body>
+</html>
