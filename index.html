@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base complète — Aides Les Montagnes Enflammées</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #fafaf8; color: #111; font-size: 13px; padding: 1.5rem; max-width: 980px; margin: 0 auto; }
+
+h1 { font-size: 18px; font-weight: 600; margin-bottom: .3rem; }
+.subtitle { font-size: 12px; color: #777; margin-bottom: 1.25rem; line-height: 1.5; }
+
+/* SYNC BAR */
+.sync-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 0.5px solid #e5e5e5; background: #fff; margin-bottom: 1rem; font-size: 11px; color: #777; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; transition: background .3s; }
+.sync-dot.ok      { background: #1D9E75; }
+.sync-dot.loading { background: #BA7517; animation: pulse 1s infinite; }
+.sync-dot.error   { background: #D85A30; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sync-text { flex: 1; }
+.sync-btn { font-size: 11px; padding: 3px 10px; border-radius: 7px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; }
+.sync-btn:hover { border-color: #888; }
+
+.stats { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+.stat { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #777; }
+.stat strong { font-size: 15px; font-weight: 500; color: #111; display: block; }
+.stat.s-pert strong { color: #0F6E56; }
+
+.filters { margin-bottom: 1.25rem; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: .4rem; align-items: center; }
+.filter-label { font-size: 11px; color: #aaa; margin-right: 2px; min-width: 42px; }
+.filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 14px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; white-space: nowrap; transition: all .12s; }
+.filter-btn:hover { border-color: #999; }
+.filter-btn.active { background: #111; color: #fff; border-color: #111; }
+.filter-btn.f-pert.active { background: #0F6E56; border-color: #0F6E56; }
+
+.section { margin-bottom: 1.5rem; }
+.section-title { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: #aaa; padding-bottom: 5px; border-bottom: 0.5px solid #e8e8e8; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.badge-count { background: #f0f0ee; padding: 1px 6px; border-radius: 8px; font-size: 10px; color: #999; }
+
+.card { border: 0.5px solid #e8e8e8; border-radius: 10px; margin-bottom: 6px; background: #fff; display: flex; transition: border-color .12s; overflow: hidden; }
+.card:hover { border-color: #ccc; }
+.card.is-pert { border-color: #9FE1CB; background: #fdfffd; }
+.card.is-pert:hover { border-color: #5DCAA5; }
+
+.bar { flex-shrink: 0; width: 4px; }
+.card-body { flex: 1; min-width: 0; padding: 9px 11px; cursor: pointer; }
+.name { font-size: 12.5px; font-weight: 500; color: #111; line-height: 1.35; }
+.chev { display: inline-block; font-size: 9px; color: #ccc; margin-left: 5px; transition: transform .18s; vertical-align: middle; }
+.card.expanded .chev { transform: rotate(180deg); }
+.tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.t-res    { background: #E1F5EE; color: #0F6E56; }
+.t-bourse { background: #EEEDFE; color: #3C3489; }
+.t-reg    { background: #FAEEDA; color: #854F0B; }
+.t-eu     { background: #E6F1FB; color: #0C447C; }
+.t-star   { background: #FCEBEB; color: #993C1D; font-weight: 500; }
+.t-ur     { background: #FCEBEB; color: #A32D2D; font-weight: 600; }
+.sub { font-size: 11px; color: #888; margin-top: 2px; }
+.dl-ok   { color: #3B6D11; }
+.dl-soon { color: #854F0B; }
+.dl-ur   { color: #A32D2D; font-weight: 500; }
+.detail { display: none; margin-top: 8px; padding-top: 7px; border-top: 0.5px solid #eee; font-size: 11px; color: #666; line-height: 1.6; }
+.detail a { color: #1a6fbb; text-decoration: none; }
+.detail a:hover { text-decoration: underline; }
+.card.expanded .detail { display: block; }
+
+.side-panel { flex-shrink: 0; width: 195px; border-left: 0.5px solid #f0f0ee; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; background: #fdfdfc; }
+.card.is-pert .side-panel { border-left-color: #d0f0e8; background: #f8fefb; }
+
+.pert-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 8px; border-radius: 7px; border: 0.5px solid #e0e0e0; background: #fff; font-size: 11px; color: #888; transition: all .15s; width: 100%; text-align: left; }
+.pert-btn:hover { border-color: #9FE1CB; color: #0F6E56; background: #f2fcf8; }
+.pert-btn.on { background: #E1F5EE; border-color: #9FE1CB; color: #0F6E56; font-weight: 500; }
+.pert-icon { font-size: 14px; flex-shrink: 0; line-height: 1; }
+
+.field-wrap { display: flex; flex-direction: column; gap: 2px; }
+.field-label { font-size: 10px; color: #bbb; font-weight: 500; letter-spacing: .03em; }
+
+.status-select { font-size: 11px; padding: 4px 7px; border: 0.5px solid #e0e0e0; border-radius: 6px; background: #fff; color: #555; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; font-family: inherit; }
+.status-select:focus { outline: none; border-color: #aaa; }
+.s-etude   { background: #fff;    color: #888;    border-color: #e0e0e0 !important; }
+.s-cours   { background: #FAEEDA; color: #854F0B; border-color: #FAC775 !important; }
+.s-envoye  { background: #E6F1FB; color: #185FA5; border-color: #85B7EB !important; }
+.s-laureat { background: #E1F5EE; color: #0F6E56; border-color: #5DCAA5 !important; }
+.s-refuse  { background: #FCEBEB; color: #A32D2D; border-color: #F09595 !important; }
+
+.notes-ta { font-size: 11px; width: 100%; border: 0.5px solid #e0e0e0; border-radius: 6px; background: #fff; color: #333; padding: 5px 7px; resize: vertical; min-height: 56px; font-family: inherit; line-height: 1.45; }
+.notes-ta:focus { outline: none; border-color: #aaa; }
+.notes-ta::placeholder { color: #d0d0d0; font-style: italic; }
+
+.empty { padding: 2rem; text-align: center; color: #ccc; font-size: 12px; }
+.footer-note { font-size: 10px; color: #bbb; line-height: 1.55; margin-top: 1rem; padding-top: .75rem; border-top: 0.5px solid #eee; }
+
+.c-teal { background: #1D9E75; }
+.c-pur  { background: #7F77DD; }
+.c-amb  { background: #BA7517; }
+.c-blue { background: #378ADD; }
+.c-gr   { background: #639922; }
+.c-gray { background: #888780; }
+
+@media (max-width: 600px) { .side-panel { width: 155px; } }
+@media (max-width: 480px) {
+  .card { flex-direction: column; }
+  .side-panel { width: 100%; border-left: none; border-top: 0.5px solid #f0f0ee; }
+  .bar { width: 100%; height: 4px; border-radius: 0; }
+}
+</style>
+</head>
+<body>
+
+<h1>Les Montagnes Enflammées — Base des aides</h1>
+<p class="subtitle">Thomas CSABA (Occitanie) · Valentin LEVERRIER (PACA) · Animation LM stop-motion + 2D mixte<br>Vos annotations sont partagées en temps réel entre Thomas et Valentin.</p>
+
+<!-- SYNC STATUS BAR -->
+<div class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span class="sync-text" id="sync-text">Connexion à la base partagée…</span>
+  <button class="sync-btn" onclick="syncNow()">↺ Synchroniser</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters">
+  <div class="filter-row">
+    <span class="filter-label">Vue :</span>
+    <button class="filter-btn f-pert" onclick="setFilter('pert','only',this)">⭐ Pertinents seulement</button>
+    <button class="filter-btn active" onclick="setFilter('pert','all',this)">Tout afficher</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Type :</span>
+    <button class="filter-btn active" onclick="setFilter('type','all',this)">Tout</button>
+    <button class="filter-btn" onclick="setFilter('type','res',this)">Résidences</button>
+    <button class="filter-btn" onclick="setFilter('type','bourse',this)">Bourses nationales</button>
+    <button class="filter-btn" onclick="setFilter('type','reg',this)">Aides régionales</button>
+    <button class="filter-btn" onclick="setFilter('type','eu',this)">Europe & intl</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Zone :</span>
+    <button class="filter-btn active" onclick="setFilter('zone','all',this)">Toutes zones</button>
+    <button class="filter-btn" onclick="setFilter('zone','paca',this)">PACA (Valentin)</button>
+    <button class="filter-btn" onclick="setFilter('zone','occ',this)">Occitanie (Thomas)</button>
+    <button class="filter-btn" onclick="setFilter('zone','nat',this)">National</button>
+    <button class="filter-btn" onclick="setFilter('zone','eu',this)">Europe</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Statut :</span>
+    <button class="filter-btn active" onclick="setFilter('status','all',this)">Tous statuts</button>
+    <button class="filter-btn" onclick="setFilter('status','en-cours',this)">En cours</button>
+    <button class="filter-btn" onclick="setFilter('status','envoye',this)">Envoyé</button>
+    <button class="filter-btn" onclick="setFilter('status','laureat',this)">Lauréat 🎉</button>
+  </div>
+</div>
+
+<div id="timeline"></div>
+
+<div class="footer-note">★ = priorité haute · Cliquer sur le titre pour voir le descriptif · Le panneau à droite permet de marquer pertinent, suivre le statut et prendre des notes · Tout est synchronisé automatiquement entre Thomas et Valentin · Dates indicatives — vérifiez toujours sur le site officiel.</div>
+
+<script>
+// ─── JSONBIN CONFIG ──────────────────────────────────────────────────────────
+const BIN_ID  = '69dffd8d36566621a8b9914a';
+const API_KEY = '$2a$10$N9HrIBiMMDSp9vPpXGYgyuMBzDrfNScxPZkeDluC0IUyuiSnHAwtC';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const D = [
+  {id:'p1',name:'Région Sud PACA — bourse écriture LM fiction (auteur direct)',type:'reg',zone:'paca',bar:'c-amb',dl:'15 avr & 30 sept',urg:0,star:true,amount:'Variable',desc:'Bourse directe aux auteurs (sans producteur requis) pour fiction, animation, documentaire, immersif. Deux dépôts/an : 15 avril et 30 septembre. Lien géographique ou domicile PACA = critère clé.',url:'https://www.maregionsud.fr/vos-aides/detail/soutien-a-la-creation-et-a-la-production-de-long-metrage-de-fiction'},
+  {id:'p2',name:'Région Sud PACA — fonds animation écriture LM ★',type:'reg',zone:'paca',bar:'c-amb',dl:'15 avr & 30 sept',urg:0,star:true,amount:'Variable',desc:'Fonds spécifique animation : aide à l\'écriture, au développement, à la production. Dépôts permanents 15 avril et 30 septembre. Contrat d\'auteur min. 1 500 € requis.',url:'https://www.maregionsud.fr/vos-aides/detail/soutien-a-la-creation-et-a-la-production-doeuvres-danimation'},
+  {id:'p3',name:'Département des Alpes-Maritimes (06) — aide LM cinéma',type:'reg',zone:'paca',bar:'c-amb',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Le département 06 soutient des LM avec un lien territorial. Casa Cine se déroule au Château de La Napoule (06).',url:'https://www.departement06.fr/aide-au-long-metrage-de-cinema-27130.html'},
+  {id:'o1',name:'Région Occitanie — aide écriture audiovisuelle ★',type:'reg',zone:'occ',bar:'c-amb',dl:'15 mai 2026 ⚠',urg:1,star:true,amount:'Variable',desc:'Animation éligible dès 26 min. Dépôt en ligne du 15 avril au 15 mai 2026. Les Pyrénées = lien géographique et culturel fort.',url:'https://www.laregion.fr/Cinema-Audiovisuel-Multimedia-Aide-a-l-ecriture-d-oeuvres-audiovisuelles'},
+  {id:'o2',name:'Région Occitanie — aide création audiovisuelle animation LM ★',type:'reg',zone:'occ',bar:'c-amb',dl:'1er juin 2026 puis 1er fév 2027',urg:0,star:true,amount:'Variable',desc:'Animation LM (60 min+) pour cinéma. Lien Pyrénées = atout décisif. Distinct de l\'aide à l\'écriture audiovisuelle.',url:'https://www.laregion.fr/Cinema-Audiovisuel-Multimedia-Aide-a-la-creation-audiovisuelle'},
+  {id:'o3',name:'Occitanie Films — résidence doc croisée Québec/Occitanie',type:'res',zone:'occ',bar:'c-teal',dl:'Clos 2026 — surveiller 2027',urg:0,star:false,amount:'Résidence + bourse',desc:'Festival cinéma de Québec et Vues du Québec (Florac 48). Programme doc/fiction croisé Occitanie–Québec.',url:'https://www.occitanie-films.fr/category/animation-de-la-filiere/appel-a-projets/'},
+  {id:'n1',name:'Beaumarchais-SACD — bourse cinéma long métrage ★★',type:'bourse',zone:'nat',bar:'c-pur',dl:'~mai 2026',urg:0,star:true,amount:'Variable, cumulable',desc:'Porte d\'entrée sans condition de palmarès. Animation cinéma éligible. Co-écriture = dossier unique. Cumulable avec toutes autres aides.',url:'https://beaumarchais.asso.fr/cinema-long-metrage/'},
+  {id:'n2',name:'CNC — aide à l\'écriture scénario LM ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'Variable (commissions annuelles)',urg:0,star:true,amount:'Sélective',desc:'Pour auteurs non accompagnés par producteur. Stade synopsis/traitement. Éligibilité : 2 CM en festival cat.1 OU 2 œuvres AV 26min+ diffusées.',url:'https://www.cnc.fr/professionnels/aides-et-financements/cinema/scenario/soutien-au-scenario-aide-a-lecriture_191516'},
+  {id:'n3',name:'CNC — aide au parcours d\'auteur',type:'bourse',zone:'nat',bar:'c-pur',dl:'Variable',urg:0,star:false,amount:'20 000 € forfaitaire',desc:'Aide unique dans la carrière pour 1 ou 2 co-auteurs. À solliciter au moment clé.',url:'https://www.cnc.fr/professionnels/aides-et-financements/audiovisuel/ecriture-et-developpement'},
+  {id:'n4',name:'CNC — aide aux techniques d\'animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'Plusieurs commissions/an',urg:0,star:true,amount:'Sélective',desc:'Spécifique stop-motion + 2D mixte. Renouvellement création visuelle = critère central. Nécessite société de production déléguée en France.',url:'https://www.cnc.fr/professionnels/aides-et-financements/multi-sectoriel/production/aides-aux-techniques-danimation-anciennement-cvs_1664116'},
+  {id:'n5',name:'Ciclic Animation — aide écriture LM animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'29 juin–3 juil 2026 (2e session)',urg:0,star:true,amount:'10 000 €',desc:'Spécifique animation toutes techniques. Basé sur pitch au Cartoon Movie, MIFA Annecy ou CEE Animation Forum. Nécessite société de production.',url:'https://animation.ciclic.fr/fonds-d-aides/longs-metrages'},
+  {id:'n6',name:'Lagardère — bourse auteur film animation ★',type:'bourse',zone:'nat',bar:'c-pur',dl:'~automne 2026',urg:0,star:true,amount:'Variable',desc:'Pour jeunes auteurs. Permet de réaliser le pilote d\'un LM d\'animation. Jury de professionnels de l\'animation.',url:'https://www.lagardere.com/fondation/bourses/auteur-de-film-danimation/'},
+  {id:'n7',name:'La Fémis — formation Du court au long',type:'bourse',zone:'nat',bar:'c-gray',dl:'27 avril 2026 ⚠',urg:1,star:false,amount:'Formation professionnelle',desc:'Pour auteurs-réalisateurs développant leur 1er scénario LM. À l\'issue : traitement + scène dialoguée.',url:'https://www.cnc.fr/-/ressources-auteurs-actualites'},
+  {id:'n8',name:'La Scénaristerie — atelier long métrage',type:'res',zone:'nat',bar:'c-teal',dl:'~mai 2026',urg:0,star:false,amount:'~1 000 € / auteur (CNC)',desc:'6 scénaristes sélectionnés. Résidence d\'écriture intensive à Paris avec consultants. Adhésion requise.',url:'https://www.scenaristerie.com/appel-a-projets-atelier-long-metrage'},
+  {id:'n9',name:'Île-de-France — aide écriture scénario animation/fiction ★',type:'reg',zone:'nat',bar:'c-amb',dl:'10 juin 2026 (1 journée seulement !)',urg:0,star:true,amount:'8 000–18 000 €',desc:'Bourse directe aux auteurs. Inscriptions UNIQUEMENT le 10 juin 2026 de 9h à 17h.',url:'https://www.iledefrance.fr/aides-et-appels-a-projets/aide-lecriture-de-scenario-cinema-et-audiovisuel'},
+  {id:'r1',name:'Groupe Ouest — workshops dramaturgie ★',type:'res',zone:'nat',bar:'c-teal',dl:'19 avril 2026 ⚠',urg:1,star:true,amount:'Gratuit sur sélection',desc:'2×1 semaine en Finistère. Sessions 15–19 juin et 26–30 octobre 2026.',url:'https://www.legroupeouest.com/actualites/workshops-groupe-ouest-developpement/'},
+  {id:'r2',name:'Groupe Ouest — sélection annuelle 2027',type:'res',zone:'nat',bar:'c-teal',dl:'~novembre 2026',urg:0,star:true,amount:'8 mois accompagnement + hébergement',desc:'8 projets/an, LM fiction + animation. 3 sessions collectives en Finistère + suivi distance.',url:'https://www.legroupeouest.com/actualites/selection-annuelle-appel-a-projets/'},
+  {id:'r3',name:'Moulin d\'Andé CÉCI — résidence francophone ★',type:'res',zone:'nat',bar:'c-teal',dl:'~octobre 2026',urg:0,star:true,amount:'Pension complète gratuite (25–40 jours)',desc:'8 lauréats/an. LM en français. Pension complète, consultants dédiés. Ouverte aux binômes auteur-réalisateur/compositeur.',url:'https://moulinande.com/ceci-residence-francophone/'},
+  {id:'r4',name:'Bordeaux Animation Workshop (BAW) ★',type:'res',zone:'nat',bar:'c-teal',dl:'~avr & ~oct 2026',urg:0,star:true,amount:'Accompagnement (sans producteur requis)',desc:'6 projets animation tous formats et techniques, sans producteur. Idéal au stade actuel.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r5',name:'Magelis/Animation3 (Charente + Wallimage + FFL) ★',type:'res',zone:'nat',bar:'c-teal',dl:'Appel ~juin / résidence ~oct',urg:0,star:true,amount:'3 000 € + hébergement',desc:'Résidence internationale 3 semaines animation. 1 semaine par pays signataire. Langue française. Phase de démarrage requise.',url:'https://www.magelis.org/aides-magelis/'},
+  {id:'r6',name:'Do Not Disturb — résidence écriture animation',type:'res',zone:'nat',bar:'c-teal',dl:'~avr & ~oct',urg:0,star:false,amount:'Variable',desc:'Résidence dédiée à l\'écriture animation. Tous formats. 2 sessions/an.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r7',name:'La Jachère — résidence cinéastes animation',type:'res',zone:'nat',bar:'c-teal',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Lieu de recherches pour cinéastes animation. Tous formats. Ouverte aux praticiens de tous arts.',url:'https://funpersecond.fr/animation/aides-et-residences/'},
+  {id:'r8',name:'Casa Cine — résidence écriture + musique ★',type:'res',zone:'nat',bar:'c-teal',dl:'Auteurs : oct–nov / Compositeurs : jan–fév',urg:0,star:true,amount:'3 semaines Château La Napoule (Cannes)',desc:'Animation éligible. Duo idéal : résidence simultanée pour auteurs (Thomas) ET compositeurs (Valentin). Tout âge, toute nationalité.',url:'https://casacine.org/fr/appel-a-projets-casa-cine-2026'},
+  {id:'r9',name:'ALCA Nouvelle-Aquitaine — Chalet Mauriac',type:'res',zone:'nat',bar:'c-teal',dl:'Variable (appel annuel)',urg:0,star:false,amount:'Résidence + bourse 1 500 €',desc:'Résidence à Saint-Symphorien (Gironde). Premiers LM tous genres. Lien Nouvelle-Aquitaine requis.',url:'https://alca-nouvelle-aquitaine.fr/fr/cinema-audiovisuel/residences-cinema'},
+  {id:'r10',name:'CITIA — Résidence Annecy Festival ★',type:'res',zone:'nat',bar:'c-teal',dl:'~été 2026 (candidature pour 2027)',urg:0,star:true,amount:'Accompagnement + mentors + réseau MIFA',desc:'La résidence animation de référence. Soutien spécifique LM animation, mentors d\'excellence.',url:'https://www.annecyfestival.com/residence-annecy-festival'},
+  {id:'r11',name:'Nef Animation + Ciclic — résidence 2 mois animation',type:'res',zone:'nat',bar:'c-teal',dl:'~jan 2027 (pour printemps 2027)',urg:0,star:false,amount:'Accompagnement + développement graphique',desc:'Programme 2 mois. Tous formats animation CM/LM. Storyboard, animatique, pitch, dossier.',url:'https://animation.ciclic.fr/'},
+  {id:'r12',name:'Trégor Cinéma — tutorat long métrage',type:'res',zone:'nat',bar:'c-teal',dl:'Toute l\'année',urg:0,star:false,amount:'Payant (accompagnement professionnel)',desc:'Accompagnement individuel LM. Animation acceptée. Mise en réseau vers sociétés de production.',url:'https://www.tregorcinema.com/'},
+  {id:'rf1',name:'Auvergne-Rhône-Alpes Cinéma — écriture LM animation ★',type:'reg',zone:'nat',bar:'c-amb',dl:'6 oct 2026 (2e session)',urg:0,star:true,amount:'Jusqu\'à 20 000 €',desc:'2 sessions/an. LM fiction, animation, documentaire. Connexion Annecy/MIFA = argument fort.',url:'https://www.auvergnerhonealpes-cinema.fr/professionnels/financement-des-projets/fonds-cinema-ecrituredeveloppement/'},
+  {id:'rf2',name:'Auvergne-Rhône-Alpes — audiovisuel fiction/animation',type:'reg',zone:'nat',bar:'c-amb',dl:'8 juil 2026 (2e session)',urg:0,star:false,amount:'Jusqu\'à 20 000 €',desc:'Séries, spéciaux, unitaires fiction + animation. 2 sessions/an.',url:'https://www.auvergnerhonealpes-cinema.fr/professionnels/financement-des-projets/fonds-audiovisuel-ecrituredeveloppement/'},
+  {id:'rf3',name:'Normandie Images — aide écriture LM',type:'reg',zone:'nat',bar:'c-amb',dl:'3 sessions/an',urg:0,star:false,amount:'Jusqu\'à 12 000 €',desc:'Fiction, doc, animation +60 min. Une résidence CÉCI ouvre l\'accès à cette aide.',url:'https://normandieimages.fr/creation-production/fonds-d-aides/'},
+  {id:'rf4',name:'Bretagne FACCA — écriture LM animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable',urg:0,star:false,amount:'10 000 €',desc:'Lien culturel avec la Bretagne requis. LM fiction + animation. Une sélection Groupe Ouest ouvre potentiellement ce fonds.',url:'https://www.bretagne.bzh/aides/fiches/cinema-audiovisuel-facca-ecriture-et-developpement/'},
+  {id:'rf5',name:'Grand Est — aide écriture cinéma/audiovisuel animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Continu (sur rendez-vous)',urg:0,star:false,amount:'Variable',desc:'Animation LM éligible. Lien avec le Grand Est requis. Entretien préalable recommandé.',url:'https://www.grandest.fr/vos-aides-regionales/aide-a-lecriture-cinema-audiovisuel-nouveaux-medias/'},
+  {id:'rf6',name:'Hauts-de-France — fonds fiction/animation LM',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Soutien écriture et développement animation et fiction. Nécessite producteur.',url:'https://mesaidespubliques.infogreffe.fr/aides/hauts-de-france-fonds-regional-aide-fiction-cinematographique-audiovisuelle-long-metrage-court-metrage-animation-serie-unitaire'},
+  {id:'rf7',name:'Magelis Charente — aide écriture développement animation',type:'reg',zone:'nat',bar:'c-amb',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Aide écriture/développement animation LM et unitaire. Prestataire local animation requis.',url:'https://www.magelis.org/aides-magelis/'},
+  {id:'e1',name:'Europe Créative MEDIA — développement LM animation ★',type:'eu',zone:'eu',bar:'c-blue',dl:'Plusieurs fenêtres/an',urg:0,star:true,amount:'Jusqu\'à 80% coûts éligibles',desc:'LM animation destiné aux salles (60 min min). Nécessite producteur européen indépendant. Contacter MEDIA France en amont.',url:'https://www.europecreative.be/fr/progr-media/aides'},
+  {id:'e2',name:'Centre du Cinéma FWB Belgique — écriture LM animation ★',type:'eu',zone:'eu',bar:'c-blue',dl:'11 mai 2026 (prochaine session)',urg:0,star:true,amount:'15 000–30 000 €',desc:'Aide développement artistique LM animation pour projets d\'initiative belge francophone. Nécessite producteur FWB.',url:'https://audiovisuel.cfwb.be/aides/aide-creation/aide-longs-metrages/'},
+  {id:'e3',name:'Cinéforom Suisse romande — aide sélective animation',type:'eu',zone:'eu',bar:'c-blue',dl:'4 sessions/an',urg:0,star:false,amount:'Jusqu\'à CHF 30 000',desc:'Tous genres (fiction, doc, animation). Nécessite société romande ou suisse. Coproduction France-Suisse possible.',url:'https://www.cineforom.ch/aide-selective'},
+  {id:'e4',name:'OFC Suisse — encouragement sélectif cinéma',type:'eu',zone:'eu',bar:'c-blue',dl:'Variable',urg:0,star:false,amount:'Variable',desc:'Office fédéral de la culture. Soutien développement + écriture. Animation éligible. Nécessite partenaire suisse.',url:'https://www.bak.admin.ch/bak/fr/home/creation-culturelle/cinema/encouragement-du-cinema/encouragement-selectif.html'},
+  {id:'e5',name:'Film Fund Luxembourg — partenaire Magelis Animation3',type:'eu',zone:'eu',bar:'c-blue',dl:'Via Magelis (~juin)',urg:0,star:false,amount:'Via résidence Animation3',desc:'Partenaire du dispositif Magelis/Animation3. Soutient les projets animation francophones en phase de démarrage.',url:'https://www.filmfund.lu/'},
+  {id:'e6',name:'Wallimage (Wallonie) — investissement animation',type:'eu',zone:'eu',bar:'c-blue',dl:'Continu',urg:0,star:false,amount:'Variable (investissement)',desc:'Fonds d\'investissement en production. Animation LM éligible. Nécessite dépenses en Wallonie.',url:'https://www.wallimage.be/'},
+  {id:'e7',name:'TorinoFilmLab — ScriptLab/Extended ★',type:'eu',zone:'eu',bar:'c-blue',dl:'~printemps (à vérifier)',urg:0,star:true,amount:'Accompagnement + réseau européen',desc:'Programme développement scénarios premiers/seconds LM. 3 workshops + suivi. Animation éligible.',url:'https://www.torinofilmlab.it'},
+  {id:'e8',name:'Biennale College Cinema (Venise) — micro-budget',type:'eu',zone:'eu',bar:'c-blue',dl:'~printemps',urg:0,star:false,amount:'150 000 € (3 projets/an)',desc:'Soutien réalisation premiers/seconds LM à micro-budget. Animation éligible. Très sélectif.',url:'https://www.labiennale.org/en/cinema/college'},
+  {id:'e9',name:'SODEC Québec — prototypage LM animation',type:'eu',zone:'eu',bar:'c-blue',dl:'Plusieurs sessions/an',urg:0,star:false,amount:'Variable (investissement)',desc:'Aide au prototypage LM animation pour sociétés québécoises. Pertinent en coproduction France-Canada.',url:'https://sodec.gouv.qc.ca/domaines-dintervention/cinema-et-television/aide-financiere/aide-developpement/'},
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let STATE = {};
+let saveTimer = null;
+let lastSaved = null;
+
+function defaultState() {
+  const s = {};
+  D.forEach(d => { s[d.id] = { pert: false, status: 'etude', notes: '' }; });
+  return s;
+}
+
+function getS(id) { return STATE[id] || { pert: false, status: 'etude', notes: '' }; }
+
+// ─── JSONBIN SYNC ────────────────────────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const dot  = document.getElementById('sync-dot');
+  const text = document.getElementById('sync-text');
+  dot.className  = 'sync-dot ' + state;
+  text.textContent = msg;
+}
+
+async function loadFromBin() {
+  setSyncStatus('loading', 'Chargement…');
+  try {
+    const r = await fetch(BIN_URL + '/latest', {
+      headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    // Merge: ensure all IDs exist
+    STATE = defaultState();
+    Object.keys(data).forEach(id => {
+      if (STATE[id] !== undefined) STATE[id] = { ...STATE[id], ...data[id] };
+    });
+    lastSaved = JSON.stringify(STATE);
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+    render();
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de connexion — vos modifications sont sauvegardées localement');
+    // fallback to localStorage
+    try { STATE = JSON.parse(localStorage.getItem('lme_fallback')) || defaultState(); } catch(_) { STATE = defaultState(); }
+    render();
+  }
+}
+
+async function saveToBin() {
+  const current = JSON.stringify(STATE);
+  if (current === lastSaved) return; // nothing changed
+  setSyncStatus('loading', 'Sauvegarde…');
+  // also save to localStorage as fallback
+  try { localStorage.setItem('lme_fallback', current); } catch(_) {}
+  try {
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY,
+      },
+      body: current,
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lastSaved = current;
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de sauvegarde — réessayez dans un instant');
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToBin, 1200); // debounce 1.2s
+}
+
+function syncNow() { loadFromBin(); }
+
+// Auto-refresh every 30 seconds to pick up changes from the other person
+setInterval(() => {
+  if (!document.hidden) loadFromBin();
+}, 30000);
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+let fPert = 'all', fType = 'all', fZone = 'all', fStatus = 'all';
+const ROW_IDX = { pert: 0, type: 1, zone: 2, status: 3 };
+
+function setFilter(dim, val, btn) {
+  document.querySelectorAll('.filter-row')[ROW_IDX[dim]].querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dim === 'pert')   fPert   = val;
+  if (dim === 'type')   fType   = val;
+  if (dim === 'zone')   fZone   = val;
+  if (dim === 'status') fStatus = val;
+  render();
+}
+
+function getFiltered() {
+  return D.filter(d => {
+    const s = getS(d.id);
+    if (fPert   === 'only' && !s.pert)           return false;
+    if (fType   !== 'all'  && d.type !== fType)  return false;
+    if (fZone   !== 'all'  && d.zone !== fZone)  return false;
+    if (fStatus !== 'all'  && s.status !== fStatus) return false;
+    return true;
+  });
+}
+
+// ─── SECTIONS ────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  { label: '🚨 Urgent — deadline imminente',    fn: d => d.urg === 1 },
+  { label: '★ Priorité haute',                  fn: d => d.star && !d.urg },
+  { label: 'PACA — aides régionales',           fn: d => d.zone === 'paca' && !d.star && !d.urg },
+  { label: 'Occitanie — aides régionales',      fn: d => d.zone === 'occ'  && !d.star && !d.urg },
+  { label: 'Résidences d\'écriture',            fn: d => d.type === 'res'  && !d.star && !d.urg },
+  { label: 'Bourses & aides nationales',        fn: d => (d.type === 'bourse' || (d.zone === 'nat' && d.type === 'reg')) && d.type !== 'res' && !d.star && !d.urg },
+  { label: 'Europe & international',           fn: d => d.type === 'eu'   && !d.star && !d.urg },
+];
+
+const STATUS_OPTS = [
+  { val: 'etude',    label: '○ À étudier',         cls: 's-etude'   },
+  { val: 'en-cours', label: '⟳ Dossier en cours',  cls: 's-cours'   },
+  { val: 'envoye',   label: '✉ Envoyé',            cls: 's-envoye'  },
+  { val: 'laureat',  label: '🎉 Lauréat',           cls: 's-laureat' },
+  { val: 'refuse',   label: '✕ Refusé',            cls: 's-refuse'  },
+];
+
+function dlClass(d) {
+  if (d.urg || d.dl.includes('⚠')) return 'dl-ur';
+  if (d.dl.match(/mai|juin|juil|avr/i)) return 'dl-soon';
+  return 'dl-ok';
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleExpand(id) {
+  const card   = document.getElementById('card-' + id);
+  const detail = document.getElementById('det-'  + id);
+  const open   = card.classList.contains('expanded');
+  card.classList.toggle('expanded', !open);
+  detail.style.display = open ? 'none' : 'block';
+}
+
+function togglePert(id) {
+  const s = getS(id);
+  s.pert = !s.pert;
+  STATE[id] = s;
+  scheduleSave();
+  const btn  = document.getElementById('pb-' + id);
+  const card = document.getElementById('card-' + id);
+  btn.className = 'pert-btn' + (s.pert ? ' on' : '');
+  btn.innerHTML = `<span class="pert-icon">${s.pert ? '✓' : '○'}</span><span>${s.pert ? 'Pertinent' : 'Marquer pertinent'}</span>`;
+  card.classList.toggle('is-pert', s.pert);
+  updateStats();
+}
+
+function changeStatus(id, sel) {
+  STATE[id].status = sel.value;
+  scheduleSave();
+  const cls = STATUS_OPTS.find(o => o.val === sel.value)?.cls || 's-etude';
+  sel.className = 'status-select ' + cls;
+  updateStats();
+}
+
+function saveNote(id, ta) {
+  STATE[id].notes = ta.value;
+  scheduleSave();
+}
+
+function updateStats() {
+  const filtered   = getFiltered();
+  const pertCount  = D.filter(d => getS(d.id).pert).length;
+  const coursCount = D.filter(d => getS(d.id).status === 'en-cours').length;
+  const envCount   = D.filter(d => getS(d.id).status === 'envoye').length;
+  const laurCount  = D.filter(d => getS(d.id).status === 'laureat').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><strong>${D.length}</strong>aides total</div>
+    <div class="stat"><strong>${filtered.length}</strong>affichées</div>
+    <div class="stat s-pert"><strong>${pertCount}</strong>pertinentes</div>
+    <div class="stat"><strong>${coursCount}</strong>en cours</div>
+    <div class="stat"><strong>${envCount}</strong>envoyées</div>
+    <div class="stat"><strong>${laurCount}</strong>lauréat</div>
+  `;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const filtered = getFiltered();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  updateStats();
+
+  if (!filtered.length) { tl.innerHTML = '<div class="empty">Aucune aide pour ces filtres.</div>'; return; }
+
+  SECTIONS.forEach(sec => {
+    const items = filtered.filter(sec.fn);
+    if (!items.length) return;
+
+    const section = document.createElement('div');
+    section.className = 'section';
+    section.innerHTML = `<div class="section-title">${sec.label} <span class="badge-count">${items.length}</span></div>`;
+
+    items.forEach(d => {
+      const s  = getS(d.id);
+      const so = STATUS_OPTS.find(o => o.val === s.status) || STATUS_OPTS[0];
+      const tags = [];
+      if (d.type === 'res')    tags.push('<span class="tag t-res">Résidence</span>');
+      if (d.type === 'bourse') tags.push('<span class="tag t-bourse">Bourse nationale</span>');
+      if (d.type === 'reg')    tags.push('<span class="tag t-reg">Aide régionale</span>');
+      if (d.type === 'eu')     tags.push('<span class="tag t-eu">Europe / intl</span>');
+      if (d.urg)               tags.push('<span class="tag t-ur">⚠ URGENT</span>');
+      if (d.star && !d.urg)   tags.push('<span class="tag t-star">★ Priorité</span>');
+
+      const optHtml = STATUS_OPTS.map(o =>
+        `<option value="${o.val}"${s.status === o.val ? ' selected' : ''}>${o.label}</option>`
+      ).join('');
+
+      const card = document.createElement('div');
+      card.className = 'card' + (s.pert ? ' is-pert' : '');
+      card.id = 'card-' + d.id;
+      card.innerHTML = `
+        <div class="bar ${d.bar}"></div>
+        <div class="card-body" onclick="toggleExpand('${d.id}')">
+          <div class="name">${d.name}<span class="chev">▾</span></div>
+          <div class="tags">${tags.join('')}</div>
+          <div class="sub">Deadline : <span class="${dlClass(d)}">${d.dl}</span>&nbsp;·&nbsp;${d.amount}</div>
+          <div class="detail" id="det-${d.id}" style="display:none">
+            <p style="margin-bottom:6px">${d.desc}</p>
+            ${d.url ? `<a href="${d.url}" target="_blank">→ Site officiel</a>` : ''}
+          </div>
+        </div>
+        <div class="side-panel" onclick="event.stopPropagation()">
+          <button class="pert-btn${s.pert ? ' on' : ''}" id="pb-${d.id}" onclick="togglePert('${d.id}')">
+            <span class="pert-icon">${s.pert ? '✓' : '○'}</span>
+            <span>${s.pert ? 'Pertinent' : 'Marquer pertinent'}</span>
+          </button>
+          <div class="field-wrap">
+            <span class="field-label">Statut</span>
+            <select class="status-select ${so.cls}" id="sel-${d.id}" onchange="changeStatus('${d.id}',this)">${optHtml}</select>
+          </div>
+          <div class="field-wrap" style="flex:1">
+            <span class="field-label">Notes</span>
+            <textarea class="notes-ta" id="ta-${d.id}" placeholder="Conditions, contact, prochaine action…" oninput="saveNote('${d.id}',this)">${s.notes}</textarea>
+          </div>
+        </div>`;
+      section.appendChild(card);
+    });
+    tl.appendChild(section);
+  });
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+STATE = defaultState();
+loadFromBin();
+</script>
+</body>
+</html>
