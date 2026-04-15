@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base complète — Aides Les Montagnes Enflammées</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #fafaf8; color: #111; font-size: 13px; padding: 1.5rem; max-width: 980px; margin: 0 auto; }
+h1 { font-size: 18px; font-weight: 600; margin-bottom: .3rem; }
+.subtitle { font-size: 12px; color: #777; margin-bottom: 1.25rem; line-height: 1.5; }
+.sync-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 0.5px solid #e5e5e5; background: #fff; margin-bottom: 1rem; font-size: 11px; color: #777; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; transition: background .3s; }
+.sync-dot.ok      { background: #1D9E75; }
+.sync-dot.loading { background: #BA7517; animation: pulse 1s infinite; }
+.sync-dot.error   { background: #D85A30; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sync-text { flex: 1; }
+.sync-btn { font-size: 11px; padding: 3px 10px; border-radius: 7px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; }
+.sync-btn:hover { border-color: #888; }
+.stats { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+.stat { background: #fff; border: 0.5px solid #e5e5e5; border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #777; }
+.stat strong { font-size: 15px; font-weight: 500; color: #111; display: block; }
+.stat.s-pert strong { color: #0F6E56; }
+.filters { margin-bottom: 1.25rem; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: .4rem; align-items: center; }
+.filter-label { font-size: 11px; color: #aaa; margin-right: 2px; min-width: 42px; }
+.filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 14px; border: 0.5px solid #ccc; background: #fff; color: #555; cursor: pointer; white-space: nowrap; transition: all .12s; }
+.filter-btn:hover { border-color: #999; }
+.filter-btn.active { background: #111; color: #fff; border-color: #111; }
+.filter-btn.f-pert.active { background: #0F6E56; border-color: #0F6E56; }
+.section { margin-bottom: 1.5rem; }
+.section-title { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: #aaa; padding-bottom: 5px; border-bottom: 0.5px solid #e8e8e8; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.badge-count { background: #f0f0ee; padding: 1px 6px; border-radius: 8px; font-size: 10px; color: #999; }
+.card { border: 0.5px solid #e8e8e8; border-radius: 10px; margin-bottom: 6px; background: #fff; display: flex; transition: border-color .12s; overflow: hidden; }
+.card:hover { border-color: #ccc; }
+.card.is-pert { border-color: #9FE1CB; background: #fdfffd; }
+.card.is-pert:hover { border-color: #5DCAA5; }
+.bar { flex-shrink: 0; width: 4px; }
+.card-body { flex: 1; min-width: 0; padding: 9px 11px; cursor: pointer; }
+.name { font-size: 12.5px; font-weight: 500; color: #111; line-height: 1.35; }
+.chev { display: inline-block; font-size: 9px; color: #ccc; margin-left: 5px; transition: transform .18s; vertical-align: middle; }
+.card.expanded .chev { transform: rotate(180deg); }
+.tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.t-res    { background: #E1F5EE; color: #0F6E56; }
+.t-bourse { background: #EEEDFE; color: #3C3489; }
+.t-reg    { background: #FAEEDA; color: #854F0B; }
+.t-eu     { background: #E6F1FB; color: #0C447C; }
+.t-star   { background: #FCEBEB; color: #993C1D; font-weight: 500; }
+.t-ur     { background: #FCEBEB; color: #A32D2D; font-weight: 600; }
+.sub { font-size: 11px; color: #888; margin-top: 2px; }
+.dl-ok   { color: #3B6D11; }
+.dl-soon { color: #854F0B; }
+.dl-ur   { color: #A32D2D; font-weight: 500; }
+.detail { display: none; margin-top: 8px; padding-top: 7px; border-top: 0.5px solid #eee; font-size: 11px; color: #666; line-height: 1.6; }
+.detail a { color: #1a6fbb; text-decoration: none; }
+.detail a:hover { text-decoration: underline; }
+.card.expanded .detail { display: block; }
+.side-panel { flex-shrink: 0; width: 195px; border-left: 0.5px solid #f0f0ee; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; background: #fdfdfc; }
+.card.is-pert .side-panel { border-left-color: #d0f0e8; background: #f8fefb; }
+.pert-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 8px; border-radius: 7px; border: 0.5px solid #e0e0e0; background: #fff; font-size: 11px; color: #888; transition: all .15s; width: 100%; text-align: left; }
+.pert-btn:hover { border-color: #9FE1CB; color: #0F6E56; background: #f2fcf8; }
+.pert-btn.on { background: #E1F5EE; border-color: #9FE1CB; color: #0F6E56; font-weight: 500; }
+.pert-icon { font-size: 14px; flex-shrink: 0; line-height: 1; }
+.field-wrap { display: flex; flex-direction: column; gap: 2px; }
+.field-label { font-size: 10px; color: #bbb; font-weight: 500; letter-spacing: .03em; }
+.status-select { font-size: 11px; padding: 4px 7px; border: 0.5px solid #e0e0e0; border-radius: 6px; background: #fff; color: #555; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; font-family: inherit; }
+.status-select:focus { outline: none; border-color: #aaa; }
+.s-etude   { background: #fff;    color: #888;    border-color: #e0e0e0 !important; }
+.s-cours   { background: #FAEEDA; color: #854F0B; border-color: #FAC775 !important; }
+.s-envoye  { background: #E6F1FB; color: #185FA5; border-color: #85B7EB !important; }
+.s-laureat { background: #E1F5EE; color: #0F6E56; border-color: #5DCAA5 !important; }
+.s-refuse  { background: #FCEBEB; color: #A32D2D; border-color: #F09595 !important; }
+.notes-ta { font-size: 11px; width: 100%; border: 0.5px solid #e0e0e0; border-radius: 6px; background: #fff; color: #333; padding: 5px 7px; resize: vertical; min-height: 56px; font-family: inherit; line-height: 1.45; }
+.notes-ta:focus { outline: none; border-color: #aaa; }
+.notes-ta::placeholder { color: #d0d0d0; font-style: italic; }
+.empty { padding: 2rem; text-align: center; color: #ccc; font-size: 12px; }
+.footer-note { font-size: 10px; color: #bbb; line-height: 1.55; margin-top: 1rem; padding-top: .75rem; border-top: 0.5px solid #eee; }
+.c-teal { background: #1D9E75; }
+.c-pur  { background: #7F77DD; }
+.c-amb  { background: #BA7517; }
+.c-blue { background: #378ADD; }
+.c-gr   { background: #639922; }
+.c-gray { background: #888780; }
+@media (max-width: 600px) { .side-panel { width: 155px; } }
+@media (max-width: 480px) {
+  .card { flex-direction: column; }
+  .side-panel { width: 100%; border-left: none; border-top: 0.5px solid #f0f0ee; }
+  .bar { width: 100%; height: 4px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Les Montagnes Enflammées — Base des aides</h1>
+<p class="subtitle">Thomas CSABA (Occitanie) · Valentin LEVERRIER (PACA) · Animation LM stop-motion + 2D mixte<br>Vos annotations sont partagées en temps réel entre Thomas et Valentin.</p>
+
+<div class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span class="sync-text" id="sync-text">Chargement…</span>
+  <button class="sync-btn" onclick="syncNow()">↺ Synchroniser</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters">
+  <div class="filter-row">
+    <span class="filter-label">Vue :</span>
+    <button class="filter-btn f-pert" onclick="setFilter('pert','only',this)">⭐ Pertinents seulement</button>
+    <button class="filter-btn active" onclick="setFilter('pert','all',this)">Tout afficher</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Type :</span>
+    <button class="filter-btn active" onclick="setFilter('type','all',this)">Tout</button>
+    <button class="filter-btn" onclick="setFilter('type','res',this)">Résidences</button>
+    <button class="filter-btn" onclick="setFilter('type','bourse',this)">Bourses nationales</button>
+    <button class="filter-btn" onclick="setFilter('type','reg',this)">Aides régionales</button>
+    <button class="filter-btn" onclick="setFilter('type','eu',this)">Europe & intl</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Zone :</span>
+    <button class="filter-btn active" onclick="setFilter('zone','all',this)">Toutes zones</button>
+    <button class="filter-btn" onclick="setFilter('zone','paca',this)">PACA (Valentin)</button>
+    <button class="filter-btn" onclick="setFilter('zone','occ',this)">Occitanie (Thomas)</button>
+    <button class="filter-btn" onclick="setFilter('zone','nat',this)">National</button>
+    <button class="filter-btn" onclick="setFilter('zone','eu',this)">Europe</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Statut :</span>
+    <button class="filter-btn active" onclick="setFilter('status','all',this)">Tous statuts</button>
+    <button class="filter-btn" onclick="setFilter('status','en-cours',this)">En cours</button>
+    <button class="filter-btn" onclick="setFilter('status','envoye',this)">Envoyé</button>
+    <button class="filter-btn" onclick="setFilter('status','laureat',this)">Lauréat 🎉</button>
+  </div>
+</div>
+
+<div id="timeline"></div>
+
+<div class="footer-note">★ = priorité haute · Cliquer sur le titre pour voir le descriptif · Le panneau à droite permet de marquer pertinent, suivre le statut et prendre des notes · Synchronisation automatique toutes les 30 secondes · Dates indicatives — vérifiez toujours sur le site officiel.</div>
+
+<script>
+// ─── JSONBIN CONFIG ──────────────────────────────────────────────────────────
+const BIN_ID  = '69dffd8d36566621a8b9914a';
+const API_KEY = '$2a$10$N9HrIBiMMDSp9vPpXGYgyuMBzDrfNScxPZkeDluC0IUyuiSnHAwtC';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+// ─── DATA — loaded from aides.json ──────────────────────────────────────────
+let D = [];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let STATE    = {};
+let saveTimer = null;
+let lastSaved = null;
+
+function defaultState() {
+  const s = {};
+  D.forEach(d => { s[d.id] = { pert: false, status: 'etude', notes: '' }; });
+  return s;
+}
+function getS(id) { return STATE[id] || { pert: false, status: 'etude', notes: '' }; }
+
+// ─── SYNC STATUS ─────────────────────────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = msg;
+}
+
+// ─── JSONBIN ─────────────────────────────────────────────────────────────────
+async function loadFromBin() {
+  setSyncStatus('loading', 'Chargement…');
+  try {
+    const r = await fetch(BIN_URL + '/latest', {
+      headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    STATE = defaultState();
+    Object.keys(data).forEach(id => {
+      if (STATE[id] !== undefined) STATE[id] = { ...STATE[id], ...data[id] };
+    });
+    lastSaved = JSON.stringify(STATE);
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+    render();
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de connexion — modifications sauvegardées localement');
+    try { STATE = JSON.parse(localStorage.getItem('lme_fallback')) || defaultState(); } catch(_) { STATE = defaultState(); }
+    render();
+  }
+}
+
+async function saveToBin() {
+  const current = JSON.stringify(STATE);
+  if (current === lastSaved) return;
+  setSyncStatus('loading', 'Sauvegarde…');
+  try { localStorage.setItem('lme_fallback', current); } catch(_) {}
+  try {
+    const r = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+      body: current,
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lastSaved = current;
+    setSyncStatus('ok', 'Synchronisé · ' + new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de sauvegarde — réessayez dans un instant');
+  }
+}
+
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveToBin, 1200); }
+function syncNow() { loadFromBin(); }
+setInterval(() => { if (!document.hidden) loadFromBin(); }, 30000);
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+let fPert = 'all', fType = 'all', fZone = 'all', fStatus = 'all';
+const ROW_IDX = { pert: 0, type: 1, zone: 2, status: 3 };
+
+function setFilter(dim, val, btn) {
+  document.querySelectorAll('.filter-row')[ROW_IDX[dim]].querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dim === 'pert')   fPert   = val;
+  if (dim === 'type')   fType   = val;
+  if (dim === 'zone')   fZone   = val;
+  if (dim === 'status') fStatus = val;
+  render();
+}
+
+function getFiltered() {
+  return D.filter(d => {
+    const s = getS(d.id);
+    if (fPert   === 'only' && !s.pert)              return false;
+    if (fType   !== 'all'  && d.type !== fType)     return false;
+    if (fZone   !== 'all'  && d.zone !== fZone)     return false;
+    if (fStatus !== 'all'  && s.status !== fStatus) return false;
+    return true;
+  });
+}
+
+// ─── SECTIONS ────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  { label: '🚨 Urgent — deadline imminente',    fn: d => d.urg === 1 },
+  { label: '★ Priorité haute',                  fn: d => d.star && !d.urg },
+  { label: 'PACA — aides régionales',           fn: d => d.zone === 'paca' && !d.star && !d.urg },
+  { label: 'Occitanie — aides régionales',      fn: d => d.zone === 'occ'  && !d.star && !d.urg },
+  { label: 'Résidences d\'écriture',            fn: d => d.type === 'res'  && !d.star && !d.urg },
+  { label: 'Bourses & aides nationales',        fn: d => (d.type === 'bourse' || (d.zone === 'nat' && d.type === 'reg')) && d.type !== 'res' && !d.star && !d.urg },
+  { label: 'Europe & international',            fn: d => d.type === 'eu'   && !d.star && !d.urg },
+];
+
+const STATUS_OPTS = [
+  { val: 'etude',    label: '○ À étudier',         cls: 's-etude'   },
+  { val: 'en-cours', label: '⟳ Dossier en cours',  cls: 's-cours'   },
+  { val: 'envoye',   label: '✉ Envoyé',            cls: 's-envoye'  },
+  { val: 'laureat',  label: '🎉 Lauréat',           cls: 's-laureat' },
+  { val: 'refuse',   label: '✕ Refusé',            cls: 's-refuse'  },
+];
+
+function dlClass(d) {
+  if (d.urg || d.dl.includes('⚠')) return 'dl-ur';
+  if (d.dl.match(/mai|juin|juil|avr/i)) return 'dl-soon';
+  return 'dl-ok';
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleExpand(id) {
+  const card = document.getElementById('card-' + id);
+  const det  = document.getElementById('det-'  + id);
+  const open = card.classList.contains('expanded');
+  card.classList.toggle('expanded', !open);
+  det.style.display = open ? 'none' : 'block';
+}
+
+function togglePert(id) {
+  const s = getS(id);
+  s.pert = !s.pert;
+  STATE[id] = s;
+  scheduleSave();
+  const btn  = document.getElementById('pb-' + id);
+  const card = document.getElementById('card-' + id);
+  btn.className = 'pert-btn' + (s.pert ? ' on' : '');
+  btn.innerHTML = `<span class="pert-icon">${s.pert ? '✓' : '○'}</span><span>${s.pert ? 'Pertinent' : 'Marquer pertinent'}</span>`;
+  card.classList.toggle('is-pert', s.pert);
+  updateStats();
+}
+
+function changeStatus(id, sel) {
+  STATE[id].status = sel.value;
+  scheduleSave();
+  const cls = STATUS_OPTS.find(o => o.val === sel.value)?.cls || 's-etude';
+  sel.className = 'status-select ' + cls;
+  updateStats();
+}
+
+function saveNote(id, ta) { STATE[id].notes = ta.value; scheduleSave(); }
+
+function updateStats() {
+  const filtered = getFiltered();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><strong>${D.length}</strong>aides total</div>
+    <div class="stat"><strong>${filtered.length}</strong>affichées</div>
+    <div class="stat s-pert"><strong>${D.filter(d=>getS(d.id).pert).length}</strong>pertinentes</div>
+    <div class="stat"><strong>${D.filter(d=>getS(d.id).status==='en-cours').length}</strong>en cours</div>
+    <div class="stat"><strong>${D.filter(d=>getS(d.id).status==='envoye').length}</strong>envoyées</div>
+    <div class="stat"><strong>${D.filter(d=>getS(d.id).status==='laureat').length}</strong>lauréat</div>
+  `;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const filtered = getFiltered();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  updateStats();
+  if (!filtered.length) { tl.innerHTML = '<div class="empty">Aucune aide pour ces filtres.</div>'; return; }
+
+  SECTIONS.forEach(sec => {
+    const items = filtered.filter(sec.fn);
+    if (!items.length) return;
+    const section = document.createElement('div');
+    section.className = 'section';
+    section.innerHTML = `<div class="section-title">${sec.label} <span class="badge-count">${items.length}</span></div>`;
+    items.forEach(d => {
+      const s  = getS(d.id);
+      const so = STATUS_OPTS.find(o => o.val === s.status) || STATUS_OPTS[0];
+      const tags = [];
+      if (d.type === 'res')    tags.push('<span class="tag t-res">Résidence</span>');
+      if (d.type === 'bourse') tags.push('<span class="tag t-bourse">Bourse nationale</span>');
+      if (d.type === 'reg')    tags.push('<span class="tag t-reg">Aide régionale</span>');
+      if (d.type === 'eu')     tags.push('<span class="tag t-eu">Europe / intl</span>');
+      if (d.urg)               tags.push('<span class="tag t-ur">⚠ URGENT</span>');
+      if (d.star && !d.urg)   tags.push('<span class="tag t-star">★ Priorité</span>');
+      const optHtml = STATUS_OPTS.map(o =>
+        `<option value="${o.val}"${s.status===o.val?' selected':''}>${o.label}</option>`
+      ).join('');
+      const card = document.createElement('div');
+      card.className = 'card' + (s.pert ? ' is-pert' : '');
+      card.id = 'card-' + d.id;
+      card.innerHTML = `
+        <div class="bar ${d.bar}"></div>
+        <div class="card-body" onclick="toggleExpand('${d.id}')">
+          <div class="name">${d.name}<span class="chev">▾</span></div>
+          <div class="tags">${tags.join('')}</div>
+          <div class="sub">Deadline : <span class="${dlClass(d)}">${d.dl}</span>&nbsp;·&nbsp;${d.amount}</div>
+          <div class="detail" id="det-${d.id}" style="display:none">
+            <p style="margin-bottom:6px">${d.desc}</p>
+            ${d.url?`<a href="${d.url}" target="_blank">→ Site officiel</a>`:''}
+          </div>
+        </div>
+        <div class="side-panel" onclick="event.stopPropagation()">
+          <button class="pert-btn${s.pert?' on':''}" id="pb-${d.id}" onclick="togglePert('${d.id}')">
+            <span class="pert-icon">${s.pert?'✓':'○'}</span>
+            <span>${s.pert?'Pertinent':'Marquer pertinent'}</span>
+          </button>
+          <div class="field-wrap">
+            <span class="field-label">Statut</span>
+            <select class="status-select ${so.cls}" id="sel-${d.id}" onchange="changeStatus('${d.id}',this)">${optHtml}</select>
+          </div>
+          <div class="field-wrap" style="flex:1">
+            <span class="field-label">Notes</span>
+            <textarea class="notes-ta" id="ta-${d.id}" placeholder="Conditions, contact, prochaine action…" oninput="saveNote('${d.id}',this)">${s.notes}</textarea>
+          </div>
+        </div>`;
+      section.appendChild(card);
+    });
+    tl.appendChild(section);
+  });
+}
+
+// ─── INIT — load aides.json then sync ────────────────────────────────────────
+fetch('aides.json?v=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    D = data;
+    STATE = defaultState();
+    loadFromBin();
+  })
+  .catch(() => {
+    document.getElementById('timeline').innerHTML =
+      '<div class="empty">Impossible de charger aides.json — vérifiez que le fichier est bien dans le même dossier que index.html.</div>';
+    setSyncStatus('error', 'Erreur de chargement');
+  });
+</script>
+</body>
+</html>
